@@ -62,3 +62,25 @@ export const customers = pgTable('customers', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 });
+
+export const orders = pgTable('orders', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  orderNumber: varchar('order_number', { length: 30 }).notNull().unique('orders_order_number_unique'),
+  customerId: uuid('customer_id').notNull().references(() => customers.id),
+  createdBy: bigint('created_by', { mode: 'number' }).notNull().references(() => users.id),
+  orderDate: timestamp('order_date', { withTimezone: true }).notNull().defaultNow(),
+  totalAmount: numeric('total_amount', { precision: 14, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const orderItems = pgTable('order_items', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  orderId: bigint('order_id', { mode: 'number' }).notNull().references(() => orders.id, { onDelete: 'cascade' }),
+  productId: bigint('product_id', { mode: 'number' }).notNull().references(() => products.id),
+  quantity: integer('quantity').notNull(),
+  unitPrice: numeric('unit_price', { precision: 12, scale: 2 }).notNull(),
+  subtotal: numeric('subtotal', { precision: 14, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
