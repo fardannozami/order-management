@@ -40,6 +40,7 @@ async function bootstrap() {
     .addServer(`http://localhost:${process.env.PORT ?? 3000}`, 'Local development')
     .addTag('Auth')
     .addBearerAuth()
+    .addSecurityRequirements('bearer')
     .build();
   const openApiDocument = SwaggerModule.createDocument(app, openApiConfig);
   app.use('/openapi.json', (_request: Request, response: Response) => {

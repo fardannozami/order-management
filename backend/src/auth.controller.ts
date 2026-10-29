@@ -11,7 +11,10 @@ export class AuthController {
 
   @Post('login')
   @Public()
-  @ApiOperation({ summary: 'Login dan mendapatkan access serta refresh token' })
+  @ApiOperation({
+    summary: 'Login dan mendapatkan access serta refresh token',
+    security: [],
+  })
   @ApiBody({
     schema: {
       type: 'object', required: ['email', 'password'],
@@ -31,7 +34,10 @@ export class AuthController {
 
   @Post('refresh')
   @Public()
-  @ApiOperation({ summary: 'Rotasi refresh token dan mendapatkan access token baru' })
+  @ApiOperation({
+    summary: 'Rotasi refresh token dan mendapatkan access token baru',
+    security: [],
+  })
   @ApiBody({ schema: { type: 'object', required: ['refresh_token'], properties: { refresh_token: { type: 'string' } } } })
   @ApiResponse({ status: 200, description: 'Token berhasil diperbarui; refresh token lama tidak dapat digunakan kembali' })
   @ApiResponse({ status: 401, description: 'Refresh token tidak valid, kedaluwarsa, atau telah digunakan' })
