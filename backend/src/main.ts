@@ -14,8 +14,8 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { AppModule, ObserveInstrument } from './app.module.js';
-import { ApiExceptionFilter } from './api-exception.filter.js';
-import { ApiResponseInterceptor } from './api-response.interceptor.js';
+import { ApiExceptionFilter } from './common/api-exception.filter.js';
+import { ApiResponseInterceptor } from './common/api-response.interceptor.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

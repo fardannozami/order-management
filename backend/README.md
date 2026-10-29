@@ -53,7 +53,7 @@ Interactive Scalar docs are available at `http://localhost:3000/`; the OpenAPI d
 
 ### Database migrations
 
-The schema is defined in `src/db/schema.ts`. After changing it, generate a SQL migration and apply pending migrations:
+The schema is defined in `src/database/schema.ts`. After changing it, generate a SQL migration and apply pending migrations:
 
 ```bash
 bun run db:generate

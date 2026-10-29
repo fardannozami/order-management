@@ -6,8 +6,8 @@ import {
 import { createHmac, createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import { compare } from 'bcryptjs';
-import { DatabaseService } from './database.service.js';
-import { refreshSessions, users } from './db/schema.js';
+import { DatabaseService } from '../database/database.service.js';
+import { refreshSessions, users } from '../database/schema.js';
 
 type LoginInput = { email?: unknown; password?: unknown };
 type AccessClaims = { sub: string; sid: string; email: string; iat: number; exp: number; typ: 'access' | 'refresh' };

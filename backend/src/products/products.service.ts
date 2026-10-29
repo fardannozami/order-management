@@ -1,7 +1,7 @@
 import { ConflictException, Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
 import { and, asc, count, desc, eq, ilike, isNull, or, type SQL } from 'drizzle-orm';
-import { DatabaseService } from './database.service.js';
-import { products } from './db/schema.js';
+import { DatabaseService } from '../database/database.service.js';
+import { products } from '../database/schema.js';
 import type { CreateProductDto, ListProductsQuery, UpdateProductDto } from './products.dto.js';
 
 @Injectable()

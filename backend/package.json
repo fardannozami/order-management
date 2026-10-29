@@ -9,8 +9,8 @@
   "scripts": {
     "build": "nest build",
     "db:generate": "bun --env-file=.env run drizzle-kit generate",
-    "db:migrate": "bun --env-file=.env src/db/migrate.ts",
-    "db:seed": "bun --env-file=.env src/db/seed.ts",
+    "db:migrate": "bun --env-file=.env src/database/migrate.ts",
+    "db:seed": "bun --env-file=.env src/database/seed.ts",
     "deploy": "nest deploy",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "bun --env-file=.env run nest start",

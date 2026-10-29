@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { createObserveModule } from '@nestjs/observe';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
-import { DatabaseService } from './database.service.js';
-import { AuthController } from './auth.controller.js';
-import { AuthService } from './auth.service.js';
-import { AccessTokenGuard } from './auth.guard.js';
-import { ProductsController } from './products.controller.js';
-import { ProductsService } from './products.service.js';
-import { CustomersController } from './customers.controller.js';
-import { CustomersService } from './customers.service.js';
+import { AppController } from './app/app.controller.js';
+import { AppService } from './app/app.service.js';
+import { DatabaseService } from './database/database.service.js';
+import { AuthController } from './auth/auth.controller.js';
+import { AuthService } from './auth/auth.service.js';
+import { AccessTokenGuard } from './auth/auth.guard.js';
+import { ProductsController } from './products/products.controller.js';
+import { ProductsService } from './products/products.service.js';
+import { CustomersController } from './customers/customers.controller.js';
+import { CustomersService } from './customers/customers.service.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
