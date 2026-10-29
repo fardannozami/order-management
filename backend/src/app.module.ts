@@ -9,6 +9,8 @@ import { AuthService } from './auth.service.js';
 import { AccessTokenGuard } from './auth.guard.js';
 import { ProductsController } from './products.controller.js';
 import { ProductsService } from './products.service.js';
+import { CustomersController } from './customers.controller.js';
+import { CustomersService } from './customers.service.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -23,12 +25,13 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       serviceId: 'backend',
     }),
   ],
-  controllers: [AppController, AuthController, ProductsController],
+  controllers: [AppController, AuthController, ProductsController, CustomersController],
   providers: [
     AppService,
     DatabaseService,
     AuthService,
     ProductsService,
+    CustomersService,
     { provide: APP_GUARD, useClass: AccessTokenGuard },
   ],
 })

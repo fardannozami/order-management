@@ -1,8 +1,10 @@
 import {
   bigint,
   bigserial,
+  date,
   integer,
   numeric,
+  pgEnum,
   pgTable,
   timestamp,
   uuid,
@@ -42,6 +44,20 @@ export const products = pgTable('products', {
   productName: varchar('product_name', { length: 150 }).notNull(),
   stock: integer('stock').notNull().default(0),
   price: numeric('price', { precision: 12, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+});
+
+export const customerGender = pgEnum('customer_gender', ['Pria', 'Wanita']);
+
+export const customers = pgTable('customers', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  customerName: varchar('customer_name', { length: 150 }).notNull(),
+  customerAddress: varchar('customer_address', { length: 255 }).notNull(),
+  gender: customerGender('gender').notNull(),
+  birthDate: date('birth_date', { mode: 'string' }).notNull(),
+  phone: varchar('phone', { length: 20 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   deletedAt: timestamp('deleted_at', { withTimezone: true }),

@@ -1,7 +1,7 @@
 import { hash } from 'bcryptjs';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { products, users } from './schema.js';
+import { customers, products, users } from './schema.js';
 
 const demoPassword = 'ChangeMe123!';
 const demoUsers = [
@@ -15,6 +15,32 @@ const productSeeds = [
   { productCode: 'P0003', productName: 'Teh Botol 350ml', stock: 30, price: '7000.00' },
   { productCode: 'P0004', productName: 'Roti Cokelat', stock: 20, price: '8500.00' },
   { productCode: 'P0005', productName: 'Kopi Susu 250ml', stock: 18, price: '15000.00' },
+];
+const customerSeeds = [
+  {
+    id: '10000000-0000-4000-8000-000000000001',
+    customerName: 'Budi Santoso',
+    customerAddress: 'Jakarta',
+    gender: 'Pria' as const,
+    birthDate: '1995-02-10',
+    phone: '081234567890',
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000002',
+    customerName: 'Siti Aminah',
+    customerAddress: 'Bandung',
+    gender: 'Wanita' as const,
+    birthDate: '1998-07-21',
+    phone: '082112345678',
+  },
+  {
+    id: '10000000-0000-4000-8000-000000000003',
+    customerName: 'Andi Wijaya',
+    customerAddress: 'Surabaya',
+    gender: 'Pria' as const,
+    birthDate: '1992-11-03',
+    phone: null,
+  },
 ];
 
 if (process.env.NODE_ENV === 'production') {
@@ -43,6 +69,11 @@ try {
     .onConflictDoNothing({ target: products.productCode })
     .returning({ product_code: products.productCode });
   console.log(`Seeded ${seededProducts.length} new products; existing product codes were left unchanged.`);
+
+  const seededCustomers = await db.insert(customers).values(customerSeeds)
+    .onConflictDoNothing({ target: customers.id })
+    .returning({ id: customers.id });
+  console.log(`Seeded ${seededCustomers.length} demo customers; existing customer IDs were left unchanged.`);
 } catch (error) {
   console.error('Database seeding failed:', error);
   process.exitCode = 1;

@@ -49,7 +49,7 @@ All routes use the `/api` prefix. Successful responses are wrapped as `{ "succes
 
 `POST /api/auth/login` accepts `{ "email": "admin@azatech.id", "password": "..." }` and returns an access token (1 hour) and refresh token (30 days by default). Use `POST /api/auth/refresh` with `{ "refresh_token": "..." }` to rotate both JWTs; a refresh token can be used only once. Use `POST /api/auth/logout` with the bearer access token to revoke that session, and `GET /api/auth/me` to read the signed-in user's profile. All routes other than login and refresh require `Authorization: Bearer <access_token>`. Set `JWT_SECRET` to a random value of at least 32 characters in `backend/.env`; a separate `JWT_REFRESH_SECRET` is recommended and can also be at least 32 characters. Refresh token hashes are stored in PostgreSQL and revoked on rotation/logout. Login requires a seeded user whose password is stored as a bcrypt hash.
 
-Interactive Scalar docs are available at `http://localhost:3000/`; the OpenAPI document is at `/openapi.json`. Configure the local server address in the OpenAPI document from `PORT` when needed. After copying `.env.example` to `.env` and applying migrations, create the demo login users and sample products with `bun run db:seed`. Demo accounts are `admin@azatech.id`, `supervisor@azatech.id`, and `kasir@azatech.id`; all use password `ChangeMe123!`. This seeder is for local/demo use and exits when `NODE_ENV=production`. Seeding does not overwrite existing users or products.
+Interactive Scalar docs are available at `http://localhost:3000/`; the OpenAPI document is at `/openapi.json`. Configure the local server address in the OpenAPI document from `PORT` when needed. After copying `.env.example` to `.env` and applying migrations, create the demo login users, products, and customers with `bun run db:seed`. Demo accounts are `admin@azatech.id`, `supervisor@azatech.id`, and `kasir@azatech.id`; all use password `ChangeMe123!`. This seeder is for local/demo use and exits when `NODE_ENV=production`. Seeding does not overwrite existing users, products, or customers.
 
 ### Database migrations
 
@@ -63,6 +63,8 @@ bun run db:migrate
 Drizzle tracks applied migration files in PostgreSQL. Run these commands from `backend`; local connection settings come from `.env`.
 
 Product endpoints are `GET /api/products` (supports `page`, `per_page`, `search`, `sort=product_name|price|stock`, and `order=asc|desc`), `GET /api/products/:id`, `POST /api/products`, `PUT /api/products/:id`, and `DELETE /api/products/:id`. All require a Bearer access token. Deleted products are hidden from normal product reads and retained with `deleted_at` for historical references.
+
+Customer endpoints are `GET /api/customers` (supports `page`, `per_page`, and name `search`), `POST /api/customers`, `GET /api/customers/:id`, `PUT /api/customers/:id`, and `DELETE /api/customers/:id`. Customer IDs are UUIDs; gender is `Pria` or `Wanita`; deleted customers are soft-deleted.
 
 ## Compile and run the project
 
