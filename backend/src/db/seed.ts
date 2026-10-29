@@ -3,9 +3,12 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import { products, users } from './schema.js';
 
-const name = process.env.SEED_USER_NAME ?? 'Admin';
-const email = process.env.SEED_USER_EMAIL ?? 'admin@example.com';
-const password = process.env.SEED_USER_PASSWORD;
+const demoPassword = 'ChangeMe123!';
+const demoUsers = [
+  { name: 'Admin AZA', email: 'admin@azatech.id' },
+  { name: 'Supervisor AZA', email: 'supervisor@azatech.id' },
+  { name: 'Kasir AZA', email: 'kasir@azatech.id' },
+];
 const productSeeds = [
   { productCode: 'P0001', productName: 'Hydrococo 150ml', stock: 25, price: '12000.00' },
   { productCode: 'P0002', productName: 'Air Mineral 600ml', stock: 40, price: '5000.00' },
@@ -14,8 +17,8 @@ const productSeeds = [
   { productCode: 'P0005', productName: 'Kopi Susu 250ml', stock: 18, price: '15000.00' },
 ];
 
-if (!password) {
-  throw new Error('Set SEED_USER_PASSWORD in backend/.env before running db:seed');
+if (process.env.NODE_ENV === 'production') {
+  throw new Error('Demo seeder tidak boleh dijalankan di production');
 }
 
 const pool = new Pool({
@@ -28,17 +31,13 @@ const pool = new Pool({
 
 try {
   const db = drizzle(pool);
-  const [user] = await db
+  const demoPasswordHash = await hash(demoPassword, 12);
+  const createdUsers = await db
     .insert(users)
-    .values({ name, email, password: await hash(password, 12) })
+    .values(demoUsers.map((user) => ({ ...user, password: demoPasswordHash })))
     .onConflictDoNothing({ target: users.email })
-    .returning({ id: users.id, email: users.email });
-
-  if (user) {
-    console.log(`Seed user created: ${user.email}`);
-  } else {
-    console.log(`Seed user already exists; unchanged: ${email}`);
-  }
+    .returning({ email: users.email });
+  console.log(`Seeded ${createdUsers.length} demo users; existing emails were left unchanged.`);
 
   const seededProducts = await db.insert(products).values(productSeeds)
     .onConflictDoNothing({ target: products.productCode })
