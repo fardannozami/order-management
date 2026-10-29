@@ -49,6 +49,8 @@ All routes use the `/api` prefix. Successful responses are wrapped as `{ "succes
 
 `POST /api/auth/login` accepts `{ "email": "admin@example.com", "password": "..." }`. A successful login returns an HS256 bearer access token and the public user fields. Invalid credentials return 401; invalid input returns 422. Set a private `JWT_SECRET` of at least 32 characters in `backend/.env`. Login requires an existing user whose `password` column contains a bcrypt hash.
 
+Interactive Scalar docs are available at `http://localhost:3000/`; the OpenAPI document is at `/openapi.json`. Configure the local server address in the OpenAPI document from `PORT` when needed. After copying `.env.example` to `.env` and applying migrations, create the development login user with `bun run db:seed`. The example seed credentials are `admin@example.com` / `ChangeMe123!`; change them in `.env` before use. Seeding does not overwrite an existing user with that email.
+
 ### Database migrations
 
 The schema is defined in `src/db/schema.ts`. After changing it, generate a SQL migration and apply pending migrations:
