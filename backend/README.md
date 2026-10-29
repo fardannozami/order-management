@@ -45,6 +45,21 @@ The backend waits for PostgreSQL to become healthy and checks the database conne
 
 All routes use the `/api` prefix. Successful responses are wrapped as `{ "success": true, "message": "OK", "data": ... }`; return `{ data, meta }` from a paginated handler to include pagination metadata. `POST` responses use HTTP 201 and the `Created` message. `204` responses remain empty. Errors use `{ "success": false, "message": "...", "errors": ... }` when field errors are available. The global validation pipe returns HTTP 422, and the exception filter normalizes HTTP errors and hides internal 500 details.
 
+### Login
+
+`POST /api/auth/login` accepts `{ "email": "admin@example.com", "password": "..." }`. A successful login returns an HS256 bearer access token and the public user fields. Invalid credentials return 401; invalid input returns 422. Set a private `JWT_SECRET` of at least 32 characters in `backend/.env`. Login requires an existing user whose `password` column contains a bcrypt hash.
+
+### Database migrations
+
+The schema is defined in `src/db/schema.ts`. After changing it, generate a SQL migration and apply pending migrations:
+
+```bash
+bun run db:generate
+bun run db:migrate
+```
+
+Drizzle tracks applied migration files in PostgreSQL. Run these commands from `backend`; local connection settings come from `.env`.
+
 ## Compile and run the project
 
 ```bash

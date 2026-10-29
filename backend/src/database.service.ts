@@ -1,5 +1,7 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool, type QueryResult, type QueryResultRow } from 'pg';
+import * as schema from './db/schema.js';
 
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
@@ -10,6 +12,8 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     user: process.env.PGUSER ?? 'order_management',
     password: process.env.PGPASSWORD ?? 'change-me',
   });
+
+  readonly db = drizzle(this.pool, { schema });
 
   async onModuleInit(): Promise<void> {
     await this.pool.query('SELECT 1');
