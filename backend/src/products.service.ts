@@ -70,7 +70,7 @@ export class ProductsService {
       }).returning();
       return mapProduct(product);
     } catch (error) {
-      if (isUniqueViolation(error)) throw new ConflictException('Kode produk sudah digunakan');
+      if (isUniqueViolation(error)) throw duplicateProductCodeException();
       throw error;
     }
   }
@@ -97,7 +97,7 @@ export class ProductsService {
       return mapProduct(product);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
-      if (isUniqueViolation(error)) throw new ConflictException('Kode produk sudah digunakan');
+      if (isUniqueViolation(error)) throw duplicateProductCodeException();
       throw error;
     }
   }
@@ -111,8 +111,22 @@ export class ProductsService {
   }
 }
 
-function isUniqueViolation(error: unknown): boolean {
-  return typeof error === 'object' && error !== null && 'code' in error && error.code === '23505';
+function duplicateProductCodeException(): ConflictException {
+  return new ConflictException({
+    message: 'Kode produk sudah digunakan',
+    errors: { product_code: ['Kode produk sudah digunakan'] },
+  });
+}
+
+function isUniqueViolation(error: unknown, seen = new Set<object>()): boolean {
+  if (typeof error !== 'object' || error === null || seen.has(error)) return false;
+  seen.add(error);
+  const value = error as { code?: unknown; cause?: unknown; constraint?: unknown };
+  if (
+    value.code === '23505' ||
+    value.constraint === 'products_product_code_unique'
+  ) return true;
+  return isUniqueViolation(value.cause, seen);
 }
 function mapProduct(product: typeof products.$inferSelect) {
   return {
