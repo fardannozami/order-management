@@ -31,6 +31,16 @@
 $ bun install
 ```
 
+## Backend and PostgreSQL with Docker
+
+The `backend/.env` file holds the local PostgreSQL credentials and is ignored by Git. Copy `backend/.env.example` to `backend/.env` if needed, then change its values for your environment. Compose reads `.env.example` as fallback values and lets `backend/.env` override them:
+
+```bash
+docker compose up --build
+```
+
+The backend waits for PostgreSQL to become healthy and checks the database connection during startup. `DatabaseService` can be injected into other providers to run parameterized PostgreSQL queries. For local development, `backend/.env` uses `PGHOST=127.0.0.1`; run `bun run start:dev` from `backend`. Compose overrides the host to `postgres` inside its network.
+
 ## Compile and run the project
 
 ```bash
