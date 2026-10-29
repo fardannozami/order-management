@@ -6,14 +6,21 @@
       "idx": 0,
       "version": "7",
       "when": 1793280015094,
-      "tag": "0000_user_table",
+      "tag": "0000_users_table",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
       "when": 1793282187504,
-      "tag": "refresh_sessions_table",
+      "tag": "0001_refresh_sessions_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793283507239,
+      "tag": "0002_products_table",
       "breakpoints": true
     }
   ]

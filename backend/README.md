@@ -49,7 +49,7 @@ All routes use the `/api` prefix. Successful responses are wrapped as `{ "succes
 
 `POST /api/auth/login` accepts `{ "email": "admin@azatech.id", "password": "..." }` and returns an access token (1 hour) and refresh token (30 days by default). Use `POST /api/auth/refresh` with `{ "refresh_token": "..." }` to rotate both JWTs; a refresh token can be used only once. Use `POST /api/auth/logout` with the bearer access token to revoke that session, and `GET /api/auth/me` to read the signed-in user's profile. All routes other than login and refresh require `Authorization: Bearer <access_token>`. Set `JWT_SECRET` to a random value of at least 32 characters in `backend/.env`; a separate `JWT_REFRESH_SECRET` is recommended and can also be at least 32 characters. Refresh token hashes are stored in PostgreSQL and revoked on rotation/logout. Login requires a seeded user whose password is stored as a bcrypt hash.
 
-Interactive Scalar docs are available at `http://localhost:3000/`; the OpenAPI document is at `/openapi.json`. Configure the local server address in the OpenAPI document from `PORT` when needed. After copying `.env.example` to `.env` and applying migrations, create the development login user with `bun run db:seed`. The example seed credentials are `admin@example.com` / `ChangeMe123!`; change them in `.env` before use. Seeding does not overwrite an existing user with that email.
+Interactive Scalar docs are available at `http://localhost:3000/`; the OpenAPI document is at `/openapi.json`. Configure the local server address in the OpenAPI document from `PORT` when needed. After copying `.env.example` to `.env` and applying migrations, create the development login user and sample products with `bun run db:seed`. The example seed credentials are `admin@azatech.id` / `ChangeMe123!`; change them in `.env` before use. Seeding does not overwrite an existing user or product with the same email or product code.
 
 ### Database migrations
 
@@ -61,6 +61,8 @@ bun run db:migrate
 ```
 
 Drizzle tracks applied migration files in PostgreSQL. Run these commands from `backend`; local connection settings come from `.env`.
+
+Product endpoints are `GET /api/products` (supports `page`, `per_page`, `search`, `sort=product_name|price|stock`, and `order=asc|desc`), `GET /api/products/:id`, `POST /api/products`, `PUT /api/products/:id`, and `DELETE /api/products/:id`. All require a Bearer access token. Deleted products are hidden from normal product reads and retained with `deleted_at` for historical references.
 
 ## Compile and run the project
 
