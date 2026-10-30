@@ -157,6 +157,8 @@ export class OrdersService {
       const datePart = today.toISOString().slice(0, 10).replace(/-/g, '');
       const startOfDayUtc = new Date(`${datePart.slice(0, 4)}-${datePart.slice(4, 6)}-${datePart.slice(6, 8)}T00:00:00.000Z`);
       const nextDayUtc = new Date(startOfDayUtc.getTime() + 24 * 60 * 60 * 1000);
+      // Serialize number allocation for this day across concurrent API processes.
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`orders:${datePart}`}, 0))`);
       const [countRow] = await tx
         .select({ total: count() })
         .from(orders)

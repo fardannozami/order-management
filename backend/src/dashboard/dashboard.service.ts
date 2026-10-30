@@ -25,7 +25,6 @@ export class DashboardService {
         })
         .from(orderItems)
         .innerJoin(products, eq(products.id, orderItems.productId))
-        .where(isNull(products.deletedAt))
         .groupBy(products.id, products.productCode, products.productName)
         .orderBy(desc(sum(orderItems.quantity)), asc(products.id))
         .limit(5),

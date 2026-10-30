@@ -23,6 +23,7 @@ describe('OrdersService', () => {
     const productMap = new Map(productList.map((p: any) => [p.id, p]));
 
     const tx: any = {
+      execute: vi.fn(async () => undefined),
       select: vi.fn((cols?: any) => ({
         from: (table: any) => {
           if (table === customers) {
@@ -68,6 +69,7 @@ describe('OrdersService', () => {
     );
 
     expect(db.db.transaction).toHaveBeenCalled();
+    expect(tx.execute).toHaveBeenCalledOnce();
     expect(result.id).toBe(1);
     expect(result.items).toHaveLength(2);
     expect(result.total_amount).toBe('29000.00');
