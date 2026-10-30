@@ -11,6 +11,7 @@ describe('DashboardService', () => {
       query.groupBy = vi.fn(() => query);
       query.orderBy = vi.fn(() => query);
       query.limit = vi.fn(() => Promise.resolve(rows));
+      // eslint-disable-next-line unicorn/no-thenable -- mock must be awaitable for queries the service awaits directly
       query.then = (resolve: (value: unknown[]) => unknown, reject: (reason: unknown) => unknown) =>
         Promise.resolve(rows).then(resolve, reject);
       select.mockReturnValueOnce(query);

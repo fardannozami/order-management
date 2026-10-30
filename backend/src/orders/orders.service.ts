@@ -18,7 +18,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import { DatabaseService } from '../database/database.service.js';
-import { customers, orderItems, orders, products, users } from '../database/schema.js';
+import { customers, orderItems, orders, products } from '../database/schema.js';
 import type { AuthenticatedRequest } from '../auth/auth.guard.js';
 import type { CreateOrderDto, ListOrdersQuery } from './orders.dto.js';
 

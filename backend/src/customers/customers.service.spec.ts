@@ -1,5 +1,4 @@
 import { NotFoundException } from '@nestjs/common';
-import { customers } from '../database/schema.js';
 import { CustomersService } from './customers.service.js';
 
 describe('CustomersService', () => {

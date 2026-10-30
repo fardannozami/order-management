@@ -1,5 +1,5 @@
 import { NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import { orders, orderItems, customers, products } from '../database/schema.js';
+import { orders, customers, products } from '../database/schema.js';
 import { OrdersService } from './orders.service.js';
 
 describe('OrdersService', () => {
@@ -24,7 +24,7 @@ describe('OrdersService', () => {
 
     const tx: any = {
       execute: vi.fn(async () => undefined),
-      select: vi.fn((cols?: any) => ({
+      select: vi.fn((_cols?: any) => ({
         from: (table: any) => {
           if (table === customers) {
             return {
@@ -45,7 +45,7 @@ describe('OrdersService', () => {
         },
       })),
       insert: vi.fn((table: any) => ({
-        values: (vals: any) => ({
+        values: (_vals: any) => ({
           returning: async () => (table === orders ? [insertedOrder] : insertedItems),
         }),
       })),
