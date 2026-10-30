@@ -2,6 +2,8 @@
 
 Aplikasi online shop sederhana untuk mengelola katalog, pelanggan, transaksi penjualan, dan ringkasan bisnis. Repository ini berisi dua service terpisah: REST API di `backend/` dan SPA Vue di `frontend/`.
 
+![Landing page](docs/screenshots/landing.png)
+
 ## Tech stack
 
 - **Backend:** NestJS, TypeScript strict, Drizzle ORM, PostgreSQL, class-validator, JWT access dan refresh token, Vitest/Supertest.
@@ -60,7 +62,9 @@ pnpm db:migrate
 - Pembuatan order multi-produk. Harga diambil dari database; validasi stok, pencatatan item, total transaksi, dan pengurangan stok berada dalam satu database transaction.
 - Nomor order format `INV-YYYYMMDD-XXXX`, dialokasikan dengan PostgreSQL advisory lock agar aman saat request bersamaan.
 - Riwayat order dengan filter tanggal dan pelanggan, serta halaman detail `/orders/:id`.
+  ![Detail order](docs/screenshots/detail-order.png)
 - Dashboard berisi total transaksi, penjualan, produk terlaris, stok kritis, dan tren penjualan tujuh hari.
+  ![Dashboard](docs/screenshots/dashboard.png)
 - Response API konsisten dalam envelope `success`, `message`, `data`, dan `meta`; error validasi menyertakan detail per field.
 - Tema frontend terang, gelap, dan mengikuti pengaturan sistem.
 
@@ -77,6 +81,8 @@ Endpoint selain login dan refresh memerlukan Bearer access token. Refresh memaka
 | Dashboard | `GET /api/dashboard/summary` |
 
 Daftar parameter dan skema request/response lengkap tersedia di Scalar/OpenAPI.
+
+![Dokumentasi API](docs/screenshots/api-doc.png)
 
 ## Build dan test
 
