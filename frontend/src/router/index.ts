@@ -4,6 +4,7 @@ import { pinia } from '../stores/pinia'
 import DashboardView from '../views/DashboardView.vue'
 import CustomersView from '../views/CustomersView.vue'
 import ProductsView from '../views/ProductsView.vue'
+import OrdersView from '../views/OrdersView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
 const router = createRouter({
@@ -42,7 +43,7 @@ const router = createRouter({
     {
       path: '/orders',
       name: 'orders',
-      component: PlaceholderView,
+      component: OrdersView,
       meta: { title: 'Order', description: 'Buat order dan lihat riwayat transaksi.', requiresAuth: true },
     },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },

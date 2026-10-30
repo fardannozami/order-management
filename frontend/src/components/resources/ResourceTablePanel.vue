@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import AppIcon from '../AppIcon.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   title: string
   description: string
   search: string
   searchPlaceholder: string
+  showSearch?: boolean
   loading: boolean
   error: boolean
   errorTitle: string
@@ -19,7 +20,7 @@ const props = defineProps<{
   page: number
   perPage: number
   totalPages: number
-}>()
+}>(), { showSearch: true })
 
 const emit = defineEmits<{
   'update:search': [value: string]
@@ -36,7 +37,7 @@ function updateSearch(event: Event) {
   <div class="products-card resource-table-panel">
     <div class="products-toolbar">
       <div><h2>{{ title }}</h2><p>{{ description }}</p></div>
-      <label class="product-search">
+      <label v-if="showSearch" class="product-search">
         <AppIcon name="search" :size="15" />
         <input :value="search" type="search" :placeholder="searchPlaceholder" aria-label="Cari" @input="updateSearch" />
         <kbd>⌘ K</kbd>
