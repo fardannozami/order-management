@@ -6,11 +6,11 @@ import * as schema from './schema.js';
 @Injectable()
 export class DatabaseService implements OnModuleInit, OnModuleDestroy {
   private readonly pool = new Pool({
-    host: process.env.PGHOST ?? 'localhost',
-    port: Number(process.env.PGPORT ?? 5432),
-    database: process.env.PGDATABASE ?? 'order_management',
-    user: process.env.PGUSER ?? 'order_management',
-    password: process.env.PGPASSWORD ?? 'change-me',
+    host: process.env.POSTGRES_HOST ?? 'localhost',
+    port: Number(process.env.POSTGRES_PORT ?? 5432),
+    database: process.env.POSTGRES_DB ?? 'order_management',
+    user: process.env.POSTGRES_USER ?? 'order_management',
+    password: process.env.POSTGRES_PASSWORD ?? 'change-me',
   });
 
   readonly db = drizzle(this.pool, { schema });

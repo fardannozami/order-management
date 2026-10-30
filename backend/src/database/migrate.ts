@@ -3,11 +3,11 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
 
 const pool = new Pool({
-  host: process.env.PGHOST ?? '127.0.0.1',
-  port: Number(process.env.PGPORT ?? 5432),
-  user: process.env.PGUSER ?? 'order_management',
-  password: process.env.PGPASSWORD ?? 'change-me',
-  database: process.env.PGDATABASE ?? 'order_management',
+  host: process.env.POSTGRES_HOST ?? '127.0.0.1',
+  port: Number(process.env.POSTGRES_PORT ?? 5432),
+  user: process.env.POSTGRES_USER ?? 'order_management',
+  password: process.env.POSTGRES_PASSWORD ?? 'change-me',
+  database: process.env.POSTGRES_DB ?? 'order_management',
 });
 
 try {
