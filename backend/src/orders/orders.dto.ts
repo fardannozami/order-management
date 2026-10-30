@@ -29,13 +29,13 @@ export class ListOrdersQuery {
   @Max(100)
   per_page = 10;
 
-  @ApiPropertyOptional({ example: '2026-10-01', description: 'Tanggal mulai (YYYY-MM-DD)' })
+  @ApiPropertyOptional({ example: '2026-10-01', description: 'Tanggal mulai (YYYY-MM-DD)', format: 'date' })
   @IsOptional()
   @IsString()
   @IsDateString({ strict: true })
   from?: string;
 
-  @ApiPropertyOptional({ example: '2026-10-31', description: 'Tanggal akhir (YYYY-MM-DD)' })
+  @ApiPropertyOptional({ example: '2026-10-31', description: 'Tanggal akhir (YYYY-MM-DD)', format: 'date' })
   @IsOptional()
   @IsString()
   @IsDateString({ strict: true })

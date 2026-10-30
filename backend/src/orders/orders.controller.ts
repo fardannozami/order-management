@@ -31,8 +31,8 @@ export class OrdersController {
   @ApiOperation({ summary: 'List order dengan filter tanggal dan customer' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'per_page', required: false, example: 10 })
-  @ApiQuery({ name: 'from', required: false, example: '2026-10-01' })
-  @ApiQuery({ name: 'to', required: false, example: '2026-10-31' })
+  @ApiQuery({ name: 'from', type: String, format: 'date', required: false, example: '2026-10-01' })
+  @ApiQuery({ name: 'to', type: String, format: 'date', required: false, example: '2026-10-31' })
   @ApiQuery({ name: 'customer_id', required: false })
   @ApiResponse({ status: 200, description: 'Daftar order beserta metadata pagination' })
   list(@Query() query: ListOrdersQuery) {
