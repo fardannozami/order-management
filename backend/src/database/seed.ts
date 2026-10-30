@@ -110,8 +110,9 @@ try {
       id: products.id,
       price: products.price,
       productCode: products.productCode,
+      stock: products.stock,
     }).from(products).where(inArray(products.productCode, productSeeds.map((p) => p.productCode)))
-      .orderBy(asc(products.productCode));
+      .orderBy(asc(products.id)).for('update');
     const seededCustomers = await tx.select({ id: customers.id })
       .from(customers).where(inArray(customers.id, customerSeeds.map((c) => c.id)));
 
@@ -173,10 +174,27 @@ try {
       });
 
       await tx.insert(orderItems).values(itemRows);
+
+      const quantitiesByProduct = new Map<number, number>();
+      for (const item of itemRows) {
+        quantitiesByProduct.set(item.productId, (quantitiesByProduct.get(item.productId) ?? 0) + item.quantity);
+      }
+      const productById = new Map(seededProducts.map((product) => [product.id, product]));
+      for (const [productId, quantitySold] of [...quantitiesByProduct].sort(([left], [right]) => left - right)) {
+        const product = productById.get(productId);
+        if (!product || product.stock < quantitySold) {
+          throw new Error(
+            `Stok seed ${product?.productCode ?? productId} tidak cukup: tersedia ${product?.stock ?? 0}, dibutuhkan ${quantitySold}.`,
+          );
+        }
+        await tx.update(products)
+          .set({ stock: product.stock - quantitySold, updatedAt: new Date() })
+          .where(eq(products.id, productId));
+      }
     }
     return createdOrders.length;
   });
-  console.log(`Seeded ${seededOrderCount} demo orders (30 order dates; existing order numbers were left unchanged).`);
+  console.log(`Seeded ${seededOrderCount} new demo orders (30 order dates; existing order numbers were left unchanged). Stock was reduced once for the new orders.`);
 } catch (error) {
   console.error('Database seeding failed:', error);
   process.exitCode = 1;
