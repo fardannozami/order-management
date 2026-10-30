@@ -23,6 +23,7 @@ const modes: { value: ThemeMode; label: string; icon: string }[] = [
 
 <template>
   <section v-if="route.name === 'login'" class="login-layout"><RouterView /></section>
+  <section v-else-if="route.name === 'landing'" class="landing-layout"><RouterView /></section>
   <div v-else class="app-shell">
     <aside class="sidebar">
       <RouterLink class="brand" to="/dashboard" aria-label="Orderly, ke dashboard">

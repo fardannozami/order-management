@@ -5,7 +5,12 @@ import PlaceholderView from '../views/PlaceholderView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', redirect: '/dashboard' },
+    {
+      path: '/',
+      name: 'landing',
+      component: () => import('../views/LandingView.vue'),
+      meta: { title: 'Beranda', public: true },
+    },
     {
       path: '/login',
       name: 'login',
