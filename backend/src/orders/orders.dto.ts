@@ -41,7 +41,7 @@ export class ListOrdersQuery {
   @IsDateString({ strict: true })
   to?: string;
 
-  @ApiPropertyOptional({ example: '9d2f6c1e-....', description: 'Filter berdasarkan customer' })
+  @ApiPropertyOptional({ description: 'Filter berdasarkan customer' })
   @IsOptional()
   @IsUUID('all')
   customer_id?: string;

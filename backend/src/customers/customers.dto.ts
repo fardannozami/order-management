@@ -33,7 +33,7 @@ export class ListCustomersQuery {
   @Max(100)
   per_page = 10;
 
-  @ApiPropertyOptional({ example: 'Budi', description: 'Cari berdasarkan nama pelanggan' })
+  @ApiPropertyOptional({ description: 'Cari berdasarkan nama pelanggan' })
   @IsOptional()
   @IsString()
   @MaxLength(150)
