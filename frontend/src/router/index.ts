@@ -46,6 +46,12 @@ const router = createRouter({
       component: OrdersView,
       meta: { title: 'Order', description: 'Buat order dan lihat riwayat transaksi.', requiresAuth: true },
     },
+    {
+      path: '/orders/:id',
+      name: 'order-detail',
+      component: () => import('../views/OrderDetailView.vue'),
+      meta: { title: 'Detail order', description: 'Rincian transaksi penjualan.', requiresAuth: true },
+    },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
   ],
 })

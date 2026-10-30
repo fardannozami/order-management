@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import AppIcon from '../components/AppIcon.vue'
 import FeedbackToast from '../components/resources/FeedbackToast.vue'
@@ -16,12 +17,11 @@ type Order = {
   total_amount: string; order_date: string; created_at: string; item_count: number
 }
 type OrderPage = { data: Order[]; meta: { page: number; per_page: number; total: number; total_pages: number } }
-type OrderDetail = Order & { customer_address: string | null; items: OrderItem[] }
-type OrderItem = { id?: number; product_id: number; product_code?: string | null; product_name?: string | null; quantity: number; unit_price: string; subtotal: string }
 type Page<T> = { data: T[]; meta: { total: number } }
 type DraftItem = { product_id: number | ''; quantity: string }
 
 const queryClient = useQueryClient()
+const router = useRouter()
 const page = ref(1)
 const perPage = 10
 const from = ref('')
@@ -30,8 +30,7 @@ const customerFilter = ref('')
 const appliedFrom = ref('')
 const appliedTo = ref('')
 const appliedCustomerFilter = ref('')
-const dialog = ref<'create' | 'detail' | null>(null)
-const selectedOrder = ref<Order | null>(null)
+const dialog = ref<'create' | null>(null)
 const customerId = ref('')
 const items = reactive<DraftItem[]>([{ product_id: '', quantity: '1' }])
 const formError = ref('')
@@ -58,15 +57,9 @@ const productsQuery = useQuery({
   queryFn: () => apiRequest<Page<Product>>('/products?page=1&per_page=100&sort=product_name&order=asc'),
   enabled: computed(() => dialog.value === 'create'),
 })
-const detailQuery = useQuery({
-  queryKey: computed(() => ['orders', 'detail', selectedOrder.value?.id]),
-  queryFn: () => apiRequest<OrderDetail>(`/orders/${selectedOrder.value?.id}`),
-  enabled: computed(() => dialog.value === 'detail' && selectedOrder.value !== null),
-})
-
 const createMutation = useMutation({
   mutationFn: (payload: { customer_id: string; items: { product_id: number; quantity: number }[] }) =>
-    apiRequest<OrderDetail>('/orders', { method: 'POST', body: JSON.stringify(payload) }),
+    apiRequest<Order>('/orders', { method: 'POST', body: JSON.stringify(payload) }),
   onSuccess: async (order) => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['orders'] }),
@@ -94,7 +87,6 @@ const draftLines = computed(() => items.map((item) => {
   return { ...item, product, quantity, subtotal: product ? Number(product.price) * quantity : 0 }
 }))
 const draftTotal = computed(() => draftLines.value.reduce((sum, line) => sum + line.subtotal, 0))
-const detailOrder = computed(() => detailQuery.data.value ?? (selectedOrder.value as OrderDetail | null))
 
 function formatRupiah(value: string | number) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value))
@@ -129,12 +121,10 @@ function openCreate() {
   dialog.value = 'create'
 }
 function openDetail(order: Order) {
-  selectedOrder.value = order
-  dialog.value = 'detail'
+  void router.push({ name: 'order-detail', params: { id: order.id } })
 }
 function closeDialog() {
   dialog.value = null
-  selectedOrder.value = null
   formError.value = ''
   Object.keys(formErrors).forEach((key) => delete formErrors[key])
 }
@@ -251,20 +241,5 @@ onBeforeUnmount(() => { if (feedbackTimer) clearTimeout(feedbackTimer) })
       </div>
     </Transition>
 
-    <Transition name="modal-fade">
-      <div v-if="dialog === 'detail' && selectedOrder" class="dialog-backdrop" @click.self="closeDialog">
-        <section class="product-dialog detail-dialog order-detail-dialog" aria-labelledby="order-detail-title">
-          <div class="dialog-header"><div><span class="dialog-kicker">RIWAYAT TRANSAKSI</span><h2 id="order-detail-title">Detail order</h2><p>{{ selectedOrder.order_number }}</p></div><button class="dialog-close" aria-label="Tutup" @click="closeDialog"><AppIcon name="close" /></button></div>
-          <div v-if="detailQuery.isPending.value" class="detail-loading"><span class="loading-spinner" /> Memuat detail order…</div>
-          <div v-else-if="detailQuery.isError.value" class="form-server-error"><AppIcon name="warning" :size="15" /> {{ detailQuery.error.value instanceof Error ? detailQuery.error.value.message : 'Detail order gagal dimuat.' }}</div>
-          <template v-else-if="detailOrder">
-            <dl class="order-detail-summary"><div><dt>Pelanggan</dt><dd>{{ detailOrder.customer_name || 'Pelanggan dihapus' }}</dd></div><div><dt>Tanggal transaksi</dt><dd>{{ formatDate(detailOrder.order_date) }}</dd></div><div v-if="detailOrder.customer_address" class="detail-wide"><dt>Alamat pelanggan</dt><dd>{{ detailOrder.customer_address }}</dd></div></dl>
-            <div class="order-detail-items"><div v-for="line in detailOrder.items" :key="line.id ?? line.product_id" class="order-detail-line"><span><strong>{{ line.product_name || `Produk #${line.product_id}` }}</strong><small>{{ line.product_code || '' }} · {{ line.quantity }} × {{ formatRupiah(line.unit_price) }}</small></span><strong>{{ formatRupiah(line.subtotal) }}</strong></div></div>
-            <div class="order-total"><span>Total pembayaran</span><strong>{{ formatRupiah(detailOrder.total_amount) }}</strong></div>
-          </template>
-          <div class="dialog-footer"><button class="secondary-action" @click="closeDialog">Tutup</button></div>
-        </section>
-      </div>
-    </Transition>
   </section>
 </template>
