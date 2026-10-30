@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import AppIcon from '../components/AppIcon.vue'
+import SearchableSelect from '../components/SearchableSelect.vue'
 import FeedbackToast from '../components/resources/FeedbackToast.vue'
 import ResourcePageHeader from '../components/resources/ResourcePageHeader.vue'
 import ResourceStats from '../components/resources/ResourceStats.vue'
@@ -18,7 +19,7 @@ type Order = {
 }
 type OrderPage = { data: Order[]; meta: { page: number; per_page: number; total: number; total_pages: number } }
 type Page<T> = { data: T[]; meta: { total: number } }
-type DraftItem = { product_id: number | ''; quantity: string }
+type DraftItem = { product_id: string | number; quantity: string }
 
 const queryClient = useQueryClient()
 const router = useRouter()
@@ -80,6 +81,12 @@ const stats = computed(() => [{
 }])
 const customers = computed(() => customersQuery.data.value?.data ?? [])
 const products = computed(() => productsQuery.data.value?.data ?? [])
+const customerOptions = computed(() =>
+  customers.value.map((customer) => ({
+    id: customer.id,
+    label: customer.phone ? `${customer.customer_name} · ${customer.phone}` : customer.customer_name,
+  }))
+)
 const selectedProducts = computed(() => new Set(items.map((item) => item.product_id).filter((id): id is number => typeof id === 'number')))
 const draftLines = computed(() => items.map((item) => {
   const product = products.value.find((candidate) => candidate.id === item.product_id)
@@ -132,6 +139,14 @@ function addItem() { items.push({ product_id: '', quantity: '1' }) }
 function removeItem(index: number) { if (items.length > 1) items.splice(index, 1) }
 function productOptions(item: DraftItem) {
   return products.value.filter((product) => product.id === item.product_id || !selectedProducts.value.has(product.id))
+}
+function productSelectOptions(item: DraftItem) {
+  return productOptions(item).map((product) => ({
+    id: product.id,
+    label: `${product.product_code} · ${product.product_name}`,
+    note: product.stock < 1 ? 'Stok habis' : `${product.stock} stok`,
+    disabled: product.stock < 1,
+  }))
 }
 function validateOrder() {
   Object.keys(formErrors).forEach((key) => delete formErrors[key])
@@ -222,13 +237,30 @@ onBeforeUnmount(() => { if (feedbackTimer) clearTimeout(feedbackTimer) })
           <div class="dialog-header"><div><span class="dialog-kicker">TRANSAKSI BARU</span><h2 id="order-form-title">Buat order</h2><p>Pilih pelanggan dan produk untuk mencatat penjualan.</p></div><button type="button" class="dialog-close" aria-label="Tutup" @click="closeDialog"><AppIcon name="close" /></button></div>
           <div v-if="formError" class="form-server-error" role="alert"><AppIcon name="warning" :size="15" /> {{ formError }}</div>
           <div v-if="customersQuery.isError.value || productsQuery.isError.value" class="form-server-error" role="alert"><AppIcon name="warning" :size="15" /> Data pelanggan atau produk belum dapat dimuat. Tutup lalu coba lagi.</div>
-          <label class="form-field"><span>Pelanggan <b>*</b></span><select v-model="customerId" required :disabled="customersQuery.isPending.value"><option value="" disabled>{{ customersQuery.isPending.value ? 'Memuat pelanggan…' : 'Pilih pelanggan' }}</option><option v-for="customer in customers" :key="customer.id" :value="customer.id">{{ customer.customer_name }}{{ customer.phone ? ` · ${customer.phone}` : '' }}</option></select><small v-if="formErrors.customer_id" class="field-error">{{ formErrors.customer_id }}</small></label>
+          <SearchableSelect
+            v-model="customerId"
+            :options="customerOptions"
+            field-label="Pelanggan"
+            :placeholder="customersQuery.isPending.value ? 'Memuat pelanggan…' : 'Cari nama atau nomor HP'"
+            :error="formErrors.customer_id"
+            :loading="customersQuery.isPending.value"
+            :disabled="customersQuery.isPending.value"
+          />
           <div class="order-items-heading"><div><strong>Produk yang dibeli</strong><small>Harga dan subtotal mengikuti katalog aktif.</small></div><button type="button" class="secondary-action" :disabled="productsQuery.isPending.value || productsQuery.isError.value || products.length === 0" @click="addItem"><AppIcon name="plus" :size="13" /> Tambah produk</button></div>
           <div v-if="productsQuery.isPending.value" class="detail-loading"><span class="loading-spinner" /> Memuat katalog produk…</div>
           <div v-else-if="products.length === 0" class="order-no-products">Belum ada produk tersedia. Tambahkan produk dengan stok terlebih dahulu.</div>
           <div v-else class="order-line-list">
             <div v-for="(item, index) in items" :key="index" class="order-line">
-              <label class="form-field"><span>Produk {{ index + 1 }}</span><select v-model.number="item.product_id" required><option value="" disabled>Pilih produk</option><option v-for="product in productOptions(item)" :key="product.id" :value="product.id" :disabled="product.stock < 1">{{ product.product_code }} · {{ product.product_name }} — {{ product.stock }} stok</option></select><small v-if="formErrors[`items.${index}.product_id`]" class="field-error">{{ formErrors[`items.${index}.product_id`] }}</small></label>
+              <SearchableSelect
+                v-model="item.product_id"
+                :options="productSelectOptions(item)"
+                :field-label="`Produk ${index + 1}`"
+                :placeholder="productsQuery.isPending.value ? 'Memuat katalog produk…' : 'Cari kode atau nama produk'"
+                :error="formErrors[`items.${index}.product_id`]"
+                :loading="productsQuery.isPending.value"
+                :disabled="productsQuery.isPending.value"
+                :empty-message="productsQuery.isError.value ? 'Gagal memuat produk' : 'Produk tidak ditemukan'"
+              />
               <label class="form-field order-quantity"><span>Qty</span><input v-model="item.quantity" type="number" min="1" step="1" :max="products.find((product) => product.id === item.product_id)?.stock" required /><small v-if="formErrors[`items.${index}.quantity`]" class="field-error">{{ formErrors[`items.${index}.quantity`] }}</small></label>
               <div class="order-line-total"><small>Subtotal</small><strong>{{ formatRupiah(draftLines[index]?.subtotal ?? 0) }}</strong></div>
               <button type="button" class="row-action danger order-remove" title="Hapus produk" :disabled="items.length === 1" @click="removeItem(index)"><AppIcon name="trash" :size="15" /></button>
