@@ -67,7 +67,6 @@ async function submitLogin() {
         </button>
         <div class="login-separator"><span />atau gunakan akun demo<span /></div>
         <button class="demo-button" type="button" @click="fillDemoCredentials"><AppIcon name="users" :size="15" /> Isi akun demo</button>
-        <div class="demo-account"><strong>admin@azatech.id</strong><span>Klik tombol di atas untuk mengisi email dan password demo.</span></div>
       </form>
       <span class="login-copyright">© 2026 Orderly · Azatech</span>
     </div>
