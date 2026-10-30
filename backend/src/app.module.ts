@@ -13,6 +13,8 @@ import { CustomersController } from './customers/customers.controller.js';
 import { CustomersService } from './customers/customers.service.js';
 import { OrdersController } from './orders/orders.controller.js';
 import { OrdersService } from './orders/orders.service.js';
+import { DashboardController } from './dashboard/dashboard.controller.js';
+import { DashboardService } from './dashboard/dashboard.service.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -27,7 +29,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       serviceId: 'backend',
     }),
   ],
-  controllers: [AppController, AuthController, ProductsController, CustomersController, OrdersController],
+  controllers: [AppController, AuthController, ProductsController, CustomersController, OrdersController, DashboardController],
   providers: [
     AppService,
     DatabaseService,
@@ -35,6 +37,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     ProductsService,
     CustomersService,
     OrdersService,
+    DashboardService,
     { provide: APP_GUARD, useClass: AccessTokenGuard },
   ],
 })
