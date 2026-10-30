@@ -52,7 +52,6 @@ onBeforeUnmount(() => window.removeEventListener('auth:expired', handleExpiredSe
         <RouterLink v-for="item in navigation" :key="item.to" class="navigation-link" :to="item.to">
           <AppIcon :name="item.icon" :size="18" />
           <span>{{ item.label }}</span>
-          <span v-if="item.to === '/orders'" class="nav-count">12</span>
         </RouterLink>
       </nav>
 
