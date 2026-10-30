@@ -1,7 +1,8 @@
 import { hash } from 'bcryptjs';
 import { drizzle } from 'drizzle-orm/node-postgres';
+import { asc, eq, inArray } from 'drizzle-orm';
 import { Pool } from 'pg';
-import { customers, products, users } from './schema.js';
+import { customers, orderItems, orders, products, users } from './schema.js';
 
 const demoPassword = 'ChangeMe123!';
 const demoUsers = [
@@ -74,6 +75,81 @@ try {
     .onConflictDoNothing({ target: customers.id })
     .returning({ id: customers.id });
   console.log(`Seeded ${seededCustomers.length} demo customers; existing customer IDs were left unchanged.`);
+
+  const seededOrderCount = await db.transaction(async (tx) => {
+    const [admin] = await tx.select({ id: users.id }).from(users)
+      .where(eq(users.email, 'admin@azatech.id')).limit(1);
+    const seededProducts = await tx.select({
+      id: products.id,
+      price: products.price,
+      productCode: products.productCode,
+    }).from(products).where(inArray(products.productCode, productSeeds.map((p) => p.productCode)))
+      .orderBy(asc(products.productCode));
+    const seededCustomers = await tx.select({ id: customers.id })
+      .from(customers).where(inArray(customers.id, customerSeeds.map((c) => c.id)));
+
+    if (!admin || seededProducts.length === 0 || seededCustomers.length === 0) {
+      throw new Error('Admin, produk, atau pelanggan seed tidak ditemukan; order seed dibatalkan.');
+    }
+
+    const now = new Date();
+    const plannedLines = (index: number) => {
+      const first = seededProducts[index % seededProducts.length];
+      const second = seededProducts[(index + 1) % seededProducts.length];
+      const quantity = (index % 3) + 1;
+      const chosen = [first, ...(index % 2 === 0 && second.id !== first.id ? [second] : [])];
+      return chosen.map((product, itemIndex) => {
+        const itemQuantity = itemIndex === 0 ? quantity : 1;
+        const unitPrice = product.price;
+        const [whole, fraction = '00'] = unitPrice.split('.');
+        const unitCents = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0').slice(0, 2));
+        const subtotalCents = unitCents * BigInt(itemQuantity);
+        return {
+          productId: product.id,
+          quantity: itemQuantity,
+          unitPrice,
+          subtotal: `${subtotalCents / 100n}.${String(subtotalCents % 100n).padStart(2, '0')}`,
+          subtotalCents,
+        };
+      });
+    };
+
+    const orderSeeds = Array.from({ length: 30 }, (_, index) => {
+      const orderDate = new Date(now.getTime() - index * 24 * 60 * 60 * 1000);
+      const datePart = orderDate.toISOString().slice(0, 10).replace(/-/g, '');
+      const totalCents = plannedLines(index).reduce((sum, item) => sum + item.subtotalCents, 0n);
+      return {
+        orderNumber: `INV-${datePart}-0001`,
+        customerId: seededCustomers[index % seededCustomers.length].id,
+        createdBy: admin.id,
+        orderDate,
+        totalAmount: `${totalCents / 100n}.${String(totalCents % 100n).padStart(2, '0')}`,
+        seedIndex: index,
+      };
+    });
+
+    const createdOrders = await tx.insert(orders).values(orderSeeds.map(({ seedIndex: _seedIndex, ...order }) => order))
+      .onConflictDoNothing({ target: orders.orderNumber })
+      .returning({ id: orders.id, orderNumber: orders.orderNumber });
+
+    if (createdOrders.length > 0) {
+      const seedIndexByOrderNumber = new Map(orderSeeds.map((order) => [order.orderNumber, order.seedIndex]));
+      const itemRows = createdOrders.flatMap((order) => {
+        const seedIndex = seedIndexByOrderNumber.get(order.orderNumber) ?? 0;
+        return plannedLines(seedIndex).map((item) => ({
+          orderId: order.id,
+          productId: item.productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.subtotal,
+        }));
+      });
+
+      await tx.insert(orderItems).values(itemRows);
+    }
+    return createdOrders.length;
+  });
+  console.log(`Seeded ${seededOrderCount} demo orders (30 order dates; existing order numbers were left unchanged).`);
 } catch (error) {
   console.error('Database seeding failed:', error);
   process.exitCode = 1;
