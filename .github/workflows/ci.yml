@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/order-management-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/order-management-frontend
+  NODE_VERSION: 24
+  PNPM_VERSION: 10.12.1
+
+jobs:
+  lint-test-backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: order_management
+          POSTGRES_USER: order_management
+          POSTGRES_PASSWORD: order_management_dev
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U order_management -d order_management"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install backend dependencies
+        run: pnpm install
+        working-directory: ./backend
+
+      - name: Run lint
+        run: pnpm lint
+        working-directory: ./backend
+
+      - name: Run tests
+        run: pnpm test
+        working-directory: ./backend
+        env:
+          POSTGRES_HOST: 127.0.0.1
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: order_management
+          POSTGRES_USER: order_management
+          POSTGRES_PASSWORD: order_management_dev
+          NODE_ENV: development
+
+      - name: Run e2e tests
+        run: pnpm test:e2e
+        working-directory: ./backend
+        env:
+          POSTGRES_HOST: 127.0.0.1
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: order_management
+          POSTGRES_USER: order_management
+          POSTGRES_PASSWORD: order_management_dev
+          NODE_ENV: development
+
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install frontend dependencies
+        run: pnpm install
+        working-directory: ./frontend
+
+      - name: Build frontend
+        run: pnpm build
+        working-directory: ./frontend
+        env:
+          VITE_API_BASE_URL: http://localhost:3000/api
+
+  build-images:
+    needs: [lint-test-backend, build-frontend]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.BACKEND_IMAGE }}:cache
+          cache-to: type=registry,ref=${{ env.BACKEND_IMAGE }}:cache,mode=max
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.FRONTEND_IMAGE }}:cache
+          cache-to: type=registry,ref=${{ env.FRONTEND_IMAGE }}:cache,mode=max
