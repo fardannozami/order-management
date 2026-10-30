@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import AppIcon from './components/AppIcon.vue'
+import { useAuthStore } from './stores/auth'
 import { useThemeStore, type ThemeMode } from './stores/theme'
 
 const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
 const theme = useThemeStore()
 const pageTitle = computed(() => String(route.meta.title ?? 'Dashboard'))
+const profileInitials = computed(() => (auth.user?.name ?? 'AD').split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase())
 
 const navigation = [
   { label: 'Dashboard', to: '/dashboard', icon: 'grid' },
@@ -19,6 +23,11 @@ const modes: { value: ThemeMode; label: string; icon: string }[] = [
   { value: 'dark', label: 'Gelap', icon: 'moon' },
   { value: 'system', label: 'Sistem', icon: 'monitor' },
 ]
+
+async function logout() {
+  try { await auth.logout() } catch { /* local session is cleared even if the API is offline */ }
+  await router.replace('/login')
+}
 </script>
 
 <template>
@@ -48,9 +57,9 @@ const modes: { value: ThemeMode; label: string; icon: string }[] = [
           <a href="http://localhost:3000/" target="_blank" rel="noreferrer">Buka dokumentasi <AppIcon name="arrow" :size="13" /></a>
         </div>
         <div class="profile-mini">
-          <div class="avatar">AD</div>
-          <div class="profile-copy"><strong>Admin Demo</strong><span>Administrator</span></div>
-          <button class="icon-button profile-menu" aria-label="Menu profil"><AppIcon name="more" /></button>
+          <div class="avatar">{{ profileInitials }}</div>
+          <div class="profile-copy"><strong>{{ auth.user?.name ?? 'Admin' }}</strong><span>{{ auth.user?.email ?? 'Akun aktif' }}</span></div>
+          <button class="icon-button profile-menu" aria-label="Keluar" title="Keluar" @click="logout"><AppIcon name="logout" :size="16" /></button>
         </div>
       </div>
     </aside>
@@ -72,7 +81,7 @@ const modes: { value: ThemeMode; label: string; icon: string }[] = [
           <button class="icon-button notification-button" aria-label="Notifikasi">
             <AppIcon name="bell" :size="18" /><span class="notification-dot" />
           </button>
-          <div class="topbar-avatar" aria-label="Profil Admin Demo">AD</div>
+          <div class="topbar-avatar" :aria-label="`Profil ${auth.user?.name ?? 'Admin'}`">{{ profileInitials }}</div>
         </div>
       </header>
       <RouterView />

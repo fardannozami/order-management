@@ -1,11 +1,43 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { computed, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import AppIcon from '../components/AppIcon.vue'
+import { ApiRequestError, useAuthStore } from '../stores/auth'
 
 const route = useRoute()
+const router = useRouter()
+const auth = useAuthStore()
 const title = computed(() => String(route.meta.title ?? 'Order Management'))
 const description = computed(() => String(route.meta.description ?? ''))
+const email = ref('')
+const password = ref('')
+const submitting = ref(false)
+const loginError = ref('')
+
+function fillDemoCredentials() {
+  email.value = 'admin@azatech.id'
+  password.value = 'ChangeMe123!'
+  loginError.value = ''
+}
+
+async function submitLogin() {
+  if (submitting.value) return
+  submitting.value = true
+  loginError.value = ''
+  try {
+    await auth.login(email.value.trim(), password.value)
+    const redirect = typeof route.query.redirect === 'string' && route.query.redirect.startsWith('/') && !route.query.redirect.startsWith('//')
+      ? route.query.redirect
+      : '/dashboard'
+    await router.replace(redirect)
+  } catch (error) {
+    loginError.value = error instanceof ApiRequestError
+      ? error.message
+      : 'Login gagal. Periksa koneksi lalu coba lagi.'
+  } finally {
+    submitting.value = false
+  }
+}
 </script>
 
 <template>
@@ -21,17 +53,21 @@ const description = computed(() => String(route.meta.description ?? ''))
       <div class="login-decoration decoration-one" /><div class="login-decoration decoration-two" />
     </div>
     <div class="login-form-area">
-      <form class="login-form" @submit.prevent>
-        <span class="demo-label">PREVIEW UI · BELUM TERHUBUNG KE API</span>
+      <form class="login-form" @submit.prevent="submitLogin">
+        <span class="demo-label">AKSES AMAN · ORDER MANAGEMENT</span>
         <h2>Selamat datang</h2>
         <p>Masuk menggunakan akun yang sudah terdaftar.</p>
         <label for="email">Email</label>
-        <input id="email" type="email" placeholder="nama@perusahaan.com" autocomplete="username" />
+        <input id="email" v-model="email" type="email" placeholder="nama@perusahaan.com" autocomplete="username" required />
         <div class="password-label"><label for="password">Password</label><a href="#forgot">Lupa password?</a></div>
-        <input id="password" type="password" placeholder="Masukkan password" autocomplete="current-password" />
-        <button class="primary-action login-submit" type="submit">Masuk ke dashboard <AppIcon name="arrow" :size="15" /></button>
-        <div class="login-separator"><span />Akun demo<span /></div>
-        <div class="demo-account"><strong>admin@azatech.id</strong><span>Password demo tersedia di README backend.</span></div>
+        <input id="password" v-model="password" type="password" placeholder="Masukkan password" autocomplete="current-password" required />
+        <p v-if="loginError" class="login-error" role="alert">{{ loginError }}</p>
+        <button class="primary-action login-submit" type="submit" :disabled="submitting">
+          {{ submitting ? 'Sedang masuk…' : 'Masuk ke dashboard' }} <AppIcon name="arrow" :size="15" />
+        </button>
+        <div class="login-separator"><span />atau gunakan akun demo<span /></div>
+        <button class="demo-button" type="button" @click="fillDemoCredentials"><AppIcon name="users" :size="15" /> Isi akun demo</button>
+        <div class="demo-account"><strong>admin@azatech.id</strong><span>Klik tombol di atas untuk mengisi email dan password demo.</span></div>
       </form>
       <span class="login-copyright">© 2026 Orderly · Azatech</span>
     </div>

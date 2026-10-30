@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
+import { pinia } from '../stores/pinia'
 import DashboardView from '../views/DashboardView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
@@ -15,34 +17,44 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: PlaceholderView,
-      meta: { title: 'Login', description: 'Masuk ke akun untuk mengelola order.' },
+      meta: { title: 'Login', description: 'Masuk ke akun untuk mengelola order.', public: true },
     },
     {
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
-      meta: { title: 'Dashboard', description: 'Ringkasan transaksi, produk terlaris, dan stok menipis.' },
+      meta: { title: 'Dashboard', description: 'Ringkasan transaksi, produk terlaris, dan stok menipis.', requiresAuth: true },
     },
     {
       path: '/products',
       name: 'products',
       component: PlaceholderView,
-      meta: { title: 'Produk', description: 'Daftar, pencarian, dan pengelolaan produk.' },
+      meta: { title: 'Produk', description: 'Daftar, pencarian, dan pengelolaan produk.', requiresAuth: true },
     },
     {
       path: '/customers',
       name: 'customers',
       component: PlaceholderView,
-      meta: { title: 'Pelanggan', description: 'Daftar dan pengelolaan data pelanggan.' },
+      meta: { title: 'Pelanggan', description: 'Daftar dan pengelolaan data pelanggan.', requiresAuth: true },
     },
     {
       path: '/orders',
       name: 'orders',
       component: PlaceholderView,
-      meta: { title: 'Order', description: 'Buat order dan lihat riwayat transaksi.' },
+      meta: { title: 'Order', description: 'Buat order dan lihat riwayat transaksi.', requiresAuth: true },
     },
     { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
   ],
+})
+
+router.beforeEach(async (to) => {
+  const auth = useAuthStore(pinia)
+  if (to.meta.requiresAuth && !(await auth.restoreSession())) {
+    return { name: 'login', query: { redirect: to.fullPath } }
+  }
+  if (to.name === 'login' && await auth.restoreSession()) {
+    return { name: 'dashboard' }
+  }
 })
 
 export default router

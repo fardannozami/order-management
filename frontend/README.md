@@ -22,4 +22,4 @@ The API base URL is configured with `VITE_API_BASE_URL` (default: `http://localh
 - PrimeVue with the Aura theme: UI components and styling
 - Light, dark, and system appearance modes (saved in local storage)
 
-The dashboard and login currently show UI previews. Product, customer, and order screens and API calls are still to be implemented. Dashboard numbers are sample data, not live API results.
+The login page calls `/auth/login`, stores the access/refresh tokens for the current browser tab, refreshes expired access tokens, and protects the internal routes. The demo button fills `admin@azatech.id` / `ChangeMe123!`; run the backend seeder to create this account. Dashboard numbers are sample data, not live API results. Product, customer, and order screens are still to be implemented.
