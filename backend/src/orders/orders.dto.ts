@@ -4,9 +4,11 @@ import {
   ArrayMinSize,
   IsArray,
   IsInt,
+  IsDateString,
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   Min,
   ValidateNested,
 } from 'class-validator';
@@ -24,16 +26,19 @@ export class ListOrdersQuery {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  @Max(100)
   per_page = 10;
 
   @ApiPropertyOptional({ example: '2026-10-01', description: 'Tanggal mulai (YYYY-MM-DD)' })
   @IsOptional()
   @IsString()
+  @IsDateString({ strict: true })
   from?: string;
 
   @ApiPropertyOptional({ example: '2026-10-31', description: 'Tanggal akhir (YYYY-MM-DD)' })
   @IsOptional()
   @IsString()
+  @IsDateString({ strict: true })
   to?: string;
 
   @ApiPropertyOptional({ example: '9d2f6c1e-....', description: 'Filter berdasarkan customer' })

@@ -9,7 +9,9 @@ import {
   count,
   eq,
   gte,
+  inArray,
   isNull,
+  lt,
   lte,
   sql,
   type SQL,
@@ -111,12 +113,18 @@ export class OrdersService {
 
       // fetch products with lock
       const productIds = input.items.map((i) => i.product_id);
+      const sortedProductIds = [...new Set(productIds)].sort((a, b) => a - b);
       const fetched = await tx
         .select()
         .from(products)
-        .where(sql`${products.id} IN (${sql.join(productIds.map((id) => sql`${id}`), sql`, `)})`)
+        .where(inArray(products.id, sortedProductIds))
         .for('update');
       const productMap = new Map(fetched.map((p) => [p.id, p]));
+
+      const qtyByProduct = new Map<number, number>();
+      for (const item of input.items) {
+        qtyByProduct.set(item.product_id, (qtyByProduct.get(item.product_id) ?? 0) + item.quantity);
+      }
 
       const errors: Record<string, string[]> = {};
       const prepared = input.items.map((item, index) => {
@@ -125,9 +133,10 @@ export class OrdersService {
           errors[`items.${index}.product_id`] = ['Produk tidak ditemukan'];
           return null;
         }
-        if (product.stock < item.quantity) {
+        const totalQty = qtyByProduct.get(item.product_id) ?? item.quantity;
+        if (product.stock < totalQty) {
           errors[`items.${index}.quantity`] = [
-            `Stok ${product.productName} tersisa ${product.stock}, diminta ${item.quantity}`,
+            `Stok ${product.productName} tersisa ${product.stock}, diminta ${totalQty}`,
           ];
           return null;
         }
@@ -146,10 +155,12 @@ export class OrdersService {
       // order number
       const today = new Date();
       const datePart = today.toISOString().slice(0, 10).replace(/-/g, '');
+      const startOfDayUtc = new Date(`${datePart.slice(0, 4)}-${datePart.slice(4, 6)}-${datePart.slice(6, 8)}T00:00:00.000Z`);
+      const nextDayUtc = new Date(startOfDayUtc.getTime() + 24 * 60 * 60 * 1000);
       const [countRow] = await tx
         .select({ total: count() })
         .from(orders)
-        .where(sql`date(${orders.orderDate}) = current_date`);
+        .where(and(gte(orders.orderDate, startOfDayUtc), lt(orders.orderDate, nextDayUtc)));
       const seq = (countRow?.total ?? 0) + 1;
       const orderNumber = `INV-${datePart}-${String(seq).padStart(4, '0')}`;
 
@@ -176,12 +187,12 @@ export class OrdersService {
       }));
       const insertedItems = await tx.insert(orderItems).values(itemValues).returning();
 
-      // decrement stock
-      for (const p of prepared) {
+      // decrement stock (aggregated per product, atomic expression)
+      for (const [productId, qty] of qtyByProduct.entries()) {
         await tx
           .update(products)
-          .set({ stock: p!.product.stock - p!.item.quantity, updatedAt: new Date() })
-          .where(eq(products.id, p!.item.product_id));
+          .set({ stock: sql`${products.stock} - ${qty}`, updatedAt: new Date() })
+          .where(eq(products.id, productId));
       }
 
       return {
