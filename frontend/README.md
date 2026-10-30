@@ -1,5 +1,24 @@
-# Vue 3 + TypeScript + Vite
+# Frontend
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Vue 3 + TypeScript + Vite client for the Order Management API.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## Development
+
+Copy `.env.example` to `.env`, then install and start the app:
+
+```bash
+cp .env.example .env
+bun install
+bun run dev
+```
+
+The API base URL is configured with `VITE_API_BASE_URL` (default: `http://localhost:3000/api`).
+
+## Configured libraries
+
+- Vue Router: `/login`, `/dashboard`, `/products`, `/customers`, and `/orders`
+- Pinia: application state store
+- TanStack Query: API query cache
+- PrimeVue with the Aura theme: UI components and styling
+
+The route views are initial placeholders; feature screens and API calls are still to be implemented.
