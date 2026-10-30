@@ -1,25 +1,27 @@
 # Frontend
 
-Vue 3 + TypeScript + Vite client for the Order Management API.
+Vue 3 + TypeScript + Vite application for the Order Management API, managed with pnpm. Panduan utama menjalankan seluruh project tersedia di [README repository](../README.md).
 
 ## Development
 
-Copy `.env.example` to `.env`, then install and start the app:
+Copy `.env.example` to `.env`, then run from this directory:
 
 ```bash
 cp .env.example .env
-bun install
-bun run dev
+pnpm install
+pnpm dev
 ```
 
-The API base URL is configured with `VITE_API_BASE_URL` (default: `http://localhost:3000/api`).
+The API base URL is configured with `VITE_API_BASE_URL` (default: `http://localhost:3000/api`). Build with `pnpm build`.
 
-## Configured libraries
+Untuk menjalankan seluruh stack dalam container, ikuti quick start di [README repository](../README.md). Compose otomatis membangun frontend dan menyediakannya di port 5173.
 
-- Vue Router: `/login`, `/dashboard`, `/products`, `/customers`, and `/orders`
-- Pinia: application state store
-- TanStack Query: API query cache
-- PrimeVue with the Aura theme: UI components and styling
-- Light, dark, and system appearance modes (saved in local storage)
+## Pages
 
-The login page calls `/auth/login`, stores the access/refresh tokens for the current browser tab, refreshes expired access tokens, and protects the internal routes. The demo button fills `admin@azatech.id` / `ChangeMe123!`; run the backend seeder to create this account. Product and customer pages are connected to their list, detail, create, update, and soft-delete API endpoints, with search, pagination, and validation. Dashboard numbers are sample data, not live API results. Order screens are still to be implemented.
+- `/login`: login terhubung ke backend, tombol demo mengisi `admin@azatech.id` / `ChangeMe123!`, refresh session, dan route protection.
+- `/dashboard`: ringkasan live dari API, tren penjualan, produk terlaris, dan stok kritis.
+- `/products` dan `/customers`: list, pencarian, pagination, detail, form CRUD, validasi, serta konfirmasi soft delete.
+- `/orders`: buat order multi-produk, riwayat, filter tanggal/pelanggan, dan validasi stok.
+- `/orders/:id`: halaman detail transaksi.
+
+Vue Router menangani navigasi, Pinia menyimpan sesi dan preferensi tema, TanStack Vue Query mengelola data API, dan PrimeVue/Aura menyediakan komponen UI. Mode terang, gelap, dan sistem tersedia; preferensi tema disimpan di local storage. Token autentikasi disimpan di session storage untuk tab browser aktif.
