@@ -41,6 +41,8 @@ docker compose up --build
 
 The backend waits for PostgreSQL to become healthy and checks the database connection during startup. `DatabaseService` can be injected into other providers to run parameterized PostgreSQL queries. For local development, `backend/.env` uses `PGHOST=127.0.0.1`; run `bun run start:dev` from `backend`. Compose overrides the host to `postgres` inside its network.
 
+For local frontend development, the API allows `http://localhost:5173` by default. Set `CORS_ORIGINS` to a comma-separated list in `.env` when the frontend uses a different origin.
+
 ## API response format
 
 All routes use the `/api` prefix. Successful responses are wrapped as `{ "success": true, "message": "OK", "data": ... }`; return `{ data, meta }` from a paginated handler to include pagination metadata. `POST` responses use HTTP 201 and the `Created` message. `204` responses remain empty. Errors use `{ "success": false, "message": "...", "errors": ... }` when field errors are available. The global validation pipe returns HTTP 422, and the exception filter normalizes HTTP errors and hides internal 500 details.
