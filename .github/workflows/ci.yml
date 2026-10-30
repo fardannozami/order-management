@@ -33,14 +33,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node and pnpm
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
 
       - name: Install pnpm
-        run: corepack enable && corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+        run: npm install -g pnpm@${{ env.PNPM_VERSION }}
 
       - name: Install backend dependencies
         run: pnpm install --frozen-lockfile
@@ -78,14 +77,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node and pnpm
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
 
       - name: Install pnpm
-        run: corepack enable && corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+        run: npm install -g pnpm@${{ env.PNPM_VERSION }}
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
