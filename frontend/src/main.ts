@@ -21,5 +21,10 @@ createApp(App)
   .use(createPinia())
   .use(router)
   .use(VueQueryPlugin, { queryClient })
-  .use(PrimeVue, { theme: { preset: Aura } })
+  .use(PrimeVue, {
+    theme: {
+      preset: Aura,
+      options: { darkModeSelector: '[data-theme="dark"]' },
+    },
+  })
   .mount('#app')

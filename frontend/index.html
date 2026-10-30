@@ -7,6 +7,15 @@
     <meta name="theme-color" content="#f5f7fb" />
     <meta name="description" content="Dashboard manajemen order, produk, dan pelanggan." />
     <title>Order Management</title>
+    <script>
+      try {
+        const savedMode = localStorage.getItem('order-management-theme') || 'system'
+        const dark = savedMode === 'dark' || (savedMode === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      } catch {
+        document.documentElement.dataset.theme = 'light'
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

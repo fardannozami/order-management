@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import DashboardView from '../views/DashboardView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
 const router = createRouter({
@@ -14,7 +15,7 @@ const router = createRouter({
     {
       path: '/dashboard',
       name: 'dashboard',
-      component: PlaceholderView,
+      component: DashboardView,
       meta: { title: 'Dashboard', description: 'Ringkasan transaksi, produk terlaris, dan stok menipis.' },
     },
     {

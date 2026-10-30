@@ -20,5 +20,6 @@ The API base URL is configured with `VITE_API_BASE_URL` (default: `http://localh
 - Pinia: application state store
 - TanStack Query: API query cache
 - PrimeVue with the Aura theme: UI components and styling
+- Light, dark, and system appearance modes (saved in local storage)
 
-The route views are initial placeholders; feature screens and API calls are still to be implemented.
+The dashboard and login currently show UI previews. Product, customer, and order screens and API calls are still to be implemented. Dashboard numbers are sample data, not live API results.
