@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { createObserveModule } from '@nestjs/observe';
-import { AppController } from './app/app.controller.js';
-import { AppService } from './app/app.service.js';
 import { DatabaseService } from './database/database.service.js';
 import { AuthController } from './auth/auth.controller.js';
 import { AuthService } from './auth/auth.service.js';
@@ -29,9 +27,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       serviceId: 'backend',
     }),
   ],
-  controllers: [AppController, AuthController, ProductsController, CustomersController, OrdersController, DashboardController],
+  controllers: [AuthController, ProductsController, CustomersController, OrdersController, DashboardController],
   providers: [
-    AppService,
     DatabaseService,
     AuthService,
     ProductsService,
