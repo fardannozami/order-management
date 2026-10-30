@@ -7,6 +7,7 @@ import {
   and,
   asc,
   count,
+  desc,
   eq,
   gte,
   inArray,
@@ -45,11 +46,12 @@ export class OrdersService {
           total_amount: orders.totalAmount,
           order_date: orders.orderDate,
           created_at: orders.createdAt,
+          item_count: sql<number>`(select count(*)::int from ${orderItems} where ${orderItems.orderId} = ${orders.id})`,
         })
         .from(orders)
         .leftJoin(customers, eq(customers.id, orders.customerId))
         .where(where)
-        .orderBy(asc(orders.orderDate), asc(orders.id))
+        .orderBy(desc(orders.orderDate), desc(orders.id))
         .limit(per_page)
         .offset((page - 1) * per_page),
       this.database.db.select({ total: count() }).from(orders).where(where),
