@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import AppIcon from './components/AppIcon.vue'
 import { useAuthStore } from './stores/auth'
@@ -28,6 +28,13 @@ async function logout() {
   try { await auth.logout() } catch { /* local session is cleared even if the API is offline */ }
   await router.replace('/login')
 }
+
+function handleExpiredSession() {
+  void router.replace({ name: 'login', query: { redirect: route.fullPath } })
+}
+
+onMounted(() => window.addEventListener('auth:expired', handleExpiredSession))
+onBeforeUnmount(() => window.removeEventListener('auth:expired', handleExpiredSession))
 </script>
 
 <template>

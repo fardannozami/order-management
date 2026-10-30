@@ -114,6 +114,15 @@ export const useAuthStore = defineStore('auth', () => {
     persistSession(tokens)
   }
 
+  async function refreshAccessToken() {
+    try {
+      await refreshSession()
+    } catch (error) {
+      if (!(error instanceof ApiRequestError && error.status === 0)) clearSession()
+      throw error
+    }
+  }
+
   async function fetchProfile() {
     if (!accessToken.value) throw new ApiRequestError('Sesi berakhir. Silakan masuk kembali.', 401)
     let response: Response
@@ -169,5 +178,5 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  return { accessToken, user, isAuthenticated, login, logout, restoreSession }
+  return { accessToken, user, isAuthenticated, login, logout, refreshAccessToken, restoreSession }
 })
