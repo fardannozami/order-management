@@ -2,6 +2,11 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import AppIcon from '../components/AppIcon.vue'
+import ConfirmDeleteDialog from '../components/resources/ConfirmDeleteDialog.vue'
+import FeedbackToast from '../components/resources/FeedbackToast.vue'
+import ResourcePageHeader from '../components/resources/ResourcePageHeader.vue'
+import ResourceStats from '../components/resources/ResourceStats.vue'
+import ResourceTablePanel from '../components/resources/ResourceTablePanel.vue'
 import { apiRequest } from '../lib/api'
 import { ApiRequestError } from '../stores/auth'
 
@@ -99,6 +104,14 @@ const deleteMutation = useMutation({
 const rows = computed(() => productsQuery.data.value?.data ?? [])
 const meta = computed(() => productsQuery.data.value?.meta)
 const lowStockCount = computed(() => dashboardQuery.data.value?.low_stock_products.length)
+const stats = computed(() => [
+  { label: 'Total produk', value: meta.value?.total ?? '—', icon: 'box', tone: 'purple' as const },
+  {
+    label: 'Stok kritis (<5)',
+    value: dashboardQuery.isPending.value ? '…' : dashboardQuery.isError.value ? '—' : lowStockCount.value ?? 0,
+    suffix: 'produk', icon: 'warning', tone: 'red' as const,
+  },
+])
 const totalPages = computed(() => Math.max(1, meta.value?.total_pages ?? 1))
 const detailProduct = computed(() => detailQuery.data.value ?? selectedProduct.value)
 
@@ -232,41 +245,35 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="products-page page-content">
-    <div class="products-heading">
-      <div>
-        <div class="welcome-eyebrow"><span class="live-dot" /> KATALOG INVENTARIS</div>
-        <h1>Produk</h1>
-        <p class="welcome-subtitle">Kelola katalog, harga, dan ketersediaan produk tokomu.</p>
-      </div>
-      <button class="primary-action" @click="openCreate"><AppIcon name="plus" :size="16" /> Tambah produk</button>
-    </div>
+    <ResourcePageHeader eyebrow="KATALOG INVENTARIS" title="Produk" description="Kelola katalog, harga, dan ketersediaan produk tokomu." action-label="Tambah produk" @action="openCreate" />
+    <ResourceStats :items="stats" note="Ambang stok kritis: kurang dari 5 unit" />
 
-    <div class="product-stats">
-      <div><span class="product-stat-icon purple"><AppIcon name="box" :size="16" /></span><span><small>Total produk</small><strong>{{ meta?.total ?? '—' }}</strong></span></div>
-      <div><span class="product-stat-icon red"><AppIcon name="warning" :size="16" /></span><span><small>Stok kritis (&lt;5)</small><strong>{{ dashboardQuery.isPending.value ? '…' : dashboardQuery.isError.value ? '—' : lowStockCount }} <small>produk</small></strong></span></div>
-      <div class="product-stat-note"><AppIcon name="check" :size="15" /> Ambang stok kritis: kurang dari 5 unit</div>
-    </div>
-
-    <div class="products-card">
-      <div class="products-toolbar">
-        <div><h2>Daftar produk</h2><p>Kelola dan pantau semua produk yang tersedia.</p></div>
-        <label class="product-search"><AppIcon name="search" :size="15" /><input v-model="searchInput" type="search" placeholder="Cari nama atau kode..." aria-label="Cari produk" /><kbd>⌘ K</kbd></label>
-      </div>
-
-      <div v-if="productsQuery.isPending.value" class="products-state loading-state" aria-live="polite">
-        <span class="loading-spinner" /><strong>Memuat katalog produk</strong><p>Sedang mengambil data terbaru.</p>
-      </div>
-      <div v-else-if="productsQuery.isError.value" class="products-state error-state" role="alert">
-        <span class="state-icon error"><AppIcon name="warning" :size="20" /></span><strong>Produk belum dapat dimuat</strong>
-        <p>{{ productsQuery.error.value instanceof Error ? productsQuery.error.value.message : 'Terjadi gangguan saat mengambil data.' }}</p>
-        <button class="secondary-action" @click="productsQuery.refetch()"><AppIcon name="download" :size="14" /> Coba lagi</button>
-      </div>
-      <div v-else-if="rows.length === 0" class="products-state empty-state">
-        <span class="state-icon"><AppIcon name="box" :size="21" /></span><strong>{{ search ? 'Produk tidak ditemukan' : 'Belum ada produk' }}</strong>
-        <p>{{ search ? 'Coba kata kunci lain atau hapus pencarian.' : 'Tambahkan produk pertama ke katalog tokomu.' }}</p>
+    <ResourceTablePanel
+      title="Daftar produk"
+      description="Kelola dan pantau semua produk yang tersedia."
+      :search="searchInput"
+      search-placeholder="Cari nama atau kode..."
+      :loading="productsQuery.isPending.value"
+      :error="productsQuery.isError.value"
+      error-title="Produk belum dapat dimuat"
+      :error-message="productsQuery.error.value instanceof Error ? productsQuery.error.value.message : 'Terjadi gangguan saat mengambil data.'"
+      :empty="rows.length === 0"
+      :empty-title="search ? 'Produk tidak ditemukan' : 'Belum ada produk'"
+      :empty-description="search ? 'Coba kata kunci lain atau hapus pencarian.' : 'Tambahkan produk pertama ke katalog tokomu.'"
+      empty-icon="box"
+      item-label="produk"
+      :total="meta?.total ?? 0"
+      :page="page"
+      :per-page="perPage"
+      :total-pages="totalPages"
+      @update:search="searchInput = $event"
+      @update:page="page = $event"
+      @retry="productsQuery.refetch()"
+    >
+      <template #empty-action>
         <button v-if="!search" class="secondary-action" @click="openCreate"><AppIcon name="plus" :size="14" /> Tambah produk</button>
-      </div>
-      <div v-else class="table-scroll products-table-scroll">
+      </template>
+      <template #table>
         <table class="products-table">
           <thead>
             <tr><th class="code-column">KODE PRODUK</th><th><button class="sort-button" @click="toggleSort('product_name')">NAMA PRODUK <span>{{ sortIcon('product_name') }}</span></button></th><th><button class="sort-button" @click="toggleSort('price')">HARGA <span>{{ sortIcon('price') }}</span></button></th><th><button class="sort-button" @click="toggleSort('stock')">STOK <span>{{ sortIcon('stock') }}</span></button></th><th>DITAMBAHKAN</th><th class="actions-column">AKSI</th></tr>
@@ -282,13 +289,8 @@ onBeforeUnmount(() => {
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <footer v-if="rows.length && !productsQuery.isPending.value" class="table-pagination">
-        <span>Menampilkan <strong>{{ (page - 1) * perPage + 1 }}–{{ Math.min(page * perPage, meta?.total ?? 0) }}</strong> dari <strong>{{ meta?.total ?? 0 }}</strong> produk</span>
-        <div class="pagination-controls"><button :disabled="page <= 1" aria-label="Halaman sebelumnya" @click="page--"><AppIcon name="chevron" :size="14" class="previous-chevron" /></button><span>Halaman <strong>{{ page }}</strong> dari <strong>{{ totalPages }}</strong></span><button :disabled="page >= totalPages" aria-label="Halaman selanjutnya" @click="page++"><AppIcon name="chevron" :size="14" /></button></div>
-      </footer>
-    </div>
+      </template>
+    </ResourceTablePanel>
     <div class="products-footnote"><AppIcon name="check" :size="13" /> Penghapusan produk menggunakan soft delete. Riwayat transaksi tetap tersimpan.</div>
 
     <Transition name="modal-fade">
@@ -319,17 +321,19 @@ onBeforeUnmount(() => {
       </div>
     </Transition>
 
-    <Transition name="modal-fade">
-      <div v-if="dialog === 'delete' && selectedProduct" class="dialog-backdrop" @click.self="closeDialog">
-        <section class="product-dialog delete-dialog" aria-labelledby="delete-product-title">
-          <div class="delete-icon"><AppIcon name="trash" :size="20" /></div><button class="dialog-close delete-close" aria-label="Tutup" @click="closeDialog"><AppIcon name="close" /></button>
-          <h2 id="delete-product-title">Hapus produk ini?</h2><p><strong>{{ selectedProduct.product_name }}</strong> akan dihapus dari katalog aktif. Produk pada riwayat order tetap tersimpan.</p>
-          <div v-if="deleteMutation.isError.value" class="form-server-error" role="alert"><AppIcon name="warning" :size="15" /> {{ deleteMutation.error.value instanceof Error ? deleteMutation.error.value.message : 'Produk belum dapat dihapus.' }}</div>
-          <div class="dialog-footer"><button class="secondary-action" :disabled="deleteMutation.isPending.value" @click="closeDialog">Batal</button><button class="delete-confirm" :disabled="deleteMutation.isPending.value" @click="confirmDelete">{{ deleteMutation.isPending.value ? 'Menghapus…' : 'Ya, hapus produk' }}</button></div>
-        </section>
-      </div>
-    </Transition>
+    <ConfirmDeleteDialog
+      v-if="dialog === 'delete' && selectedProduct"
+      entity-label="produk"
+      :entity-name="selectedProduct.product_name"
+      :pending="deleteMutation.isPending.value"
+      :error="deleteMutation.error.value instanceof Error ? deleteMutation.error.value.message : ''"
+      confirm-label="Ya, hapus produk"
+      @close="closeDialog"
+      @confirm="confirmDelete"
+    >
+      akan dihapus dari katalog aktif. Produk pada riwayat order tetap tersimpan.
+    </ConfirmDeleteDialog>
 
-    <Transition name="toast"><div v-if="feedback" class="products-toast" :class="feedback.type" role="status"><AppIcon :name="feedback.type === 'success' ? 'check' : 'warning'" :size="16" /> {{ feedback.message }}<button aria-label="Tutup notifikasi" @click="feedback = null"><AppIcon name="close" :size="14" /></button></div></Transition>
+    <FeedbackToast :feedback="feedback" @dismiss="feedback = null" />
   </section>
 </template>

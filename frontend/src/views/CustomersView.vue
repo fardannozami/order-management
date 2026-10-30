@@ -2,6 +2,11 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import AppIcon from '../components/AppIcon.vue'
+import ConfirmDeleteDialog from '../components/resources/ConfirmDeleteDialog.vue'
+import FeedbackToast from '../components/resources/FeedbackToast.vue'
+import ResourcePageHeader from '../components/resources/ResourcePageHeader.vue'
+import ResourceStats from '../components/resources/ResourceStats.vue'
+import ResourceTablePanel from '../components/resources/ResourceTablePanel.vue'
 import { apiRequest } from '../lib/api'
 import { ApiRequestError } from '../stores/auth'
 
@@ -89,6 +94,11 @@ const rows = computed(() => customersQuery.data.value?.data ?? [])
 const meta = computed(() => customersQuery.data.value?.meta)
 const totalPages = computed(() => Math.max(1, meta.value?.total_pages ?? 1))
 const detailCustomer = computed(() => detailQuery.data.value ?? selectedCustomer.value)
+const stats = computed(() => [{
+  label: 'Total pelanggan aktif',
+  value: customersQuery.isPending.value ? '…' : customersQuery.isError.value ? '—' : meta.value?.total ?? 0,
+  suffix: 'pelanggan', icon: 'users', tone: 'purple' as const,
+}])
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${value.slice(0, 10)}T00:00:00`))
@@ -210,30 +220,36 @@ onBeforeUnmount(() => {
 
 <template>
   <section class="customers-page page-content">
-    <div class="products-heading">
-      <div>
-        <div class="welcome-eyebrow"><span class="live-dot" /> DATABASE PELANGGAN</div>
-        <h1>Pelanggan</h1>
-        <p class="welcome-subtitle">Simpan dan kelola informasi pelanggan untuk setiap transaksi.</p>
-      </div>
-      <button class="primary-action" @click="openCreate"><AppIcon name="plus" :size="16" /> Tambah pelanggan</button>
-    </div>
+    <ResourcePageHeader eyebrow="DATABASE PELANGGAN" title="Pelanggan" description="Simpan dan kelola informasi pelanggan untuk setiap transaksi." action-label="Tambah pelanggan" @action="openCreate" />
+    <ResourceStats :items="stats" note="Pencarian berdasarkan nama pelanggan" />
 
-    <div class="product-stats customer-stats">
-      <div><span class="product-stat-icon purple"><AppIcon name="users" :size="16" /></span><span><small>Total pelanggan aktif</small><strong>{{ customersQuery.isPending.value ? '…' : customersQuery.isError.value ? '—' : meta?.total ?? 0 }} <small>pelanggan</small></strong></span></div>
-      <div class="product-stat-note"><AppIcon name="check" :size="15" /> Pencarian berdasarkan nama pelanggan</div>
-    </div>
-
-    <div class="products-card customers-card">
-      <div class="products-toolbar">
-        <div><h2>Daftar pelanggan</h2><p>Informasi pelanggan yang terdaftar di sistem.</p></div>
-        <label class="product-search"><AppIcon name="search" :size="15" /><input v-model="searchInput" type="search" placeholder="Cari nama pelanggan..." aria-label="Cari pelanggan" /><kbd>⌘ K</kbd></label>
-      </div>
-
-      <div v-if="customersQuery.isPending.value" class="products-state loading-state" aria-live="polite"><span class="loading-spinner" /><strong>Memuat data pelanggan</strong><p>Sedang mengambil data terbaru.</p></div>
-      <div v-else-if="customersQuery.isError.value" class="products-state error-state" role="alert"><span class="state-icon error"><AppIcon name="warning" :size="20" /></span><strong>Pelanggan belum dapat dimuat</strong><p>{{ customersQuery.error.value instanceof Error ? customersQuery.error.value.message : 'Terjadi gangguan saat mengambil data.' }}</p><button class="secondary-action" @click="customersQuery.refetch()"><AppIcon name="download" :size="14" /> Coba lagi</button></div>
-      <div v-else-if="rows.length === 0" class="products-state empty-state"><span class="state-icon"><AppIcon name="users" :size="21" /></span><strong>{{ search ? 'Pelanggan tidak ditemukan' : 'Belum ada pelanggan' }}</strong><p>{{ search ? 'Coba kata kunci lain atau hapus pencarian.' : 'Tambahkan pelanggan pertama ke daftar.' }}</p><button v-if="!search" class="secondary-action" @click="openCreate"><AppIcon name="plus" :size="14" /> Tambah pelanggan</button></div>
-      <div v-else class="table-scroll customers-table-scroll">
+    <ResourceTablePanel
+      class="customers-card"
+      title="Daftar pelanggan"
+      description="Informasi pelanggan yang terdaftar di sistem."
+      :search="searchInput"
+      search-placeholder="Cari nama pelanggan..."
+      :loading="customersQuery.isPending.value"
+      :error="customersQuery.isError.value"
+      error-title="Pelanggan belum dapat dimuat"
+      :error-message="customersQuery.error.value instanceof Error ? customersQuery.error.value.message : 'Terjadi gangguan saat mengambil data.'"
+      :empty="rows.length === 0"
+      :empty-title="search ? 'Pelanggan tidak ditemukan' : 'Belum ada pelanggan'"
+      :empty-description="search ? 'Coba kata kunci lain atau hapus pencarian.' : 'Tambahkan pelanggan pertama ke daftar.'"
+      empty-icon="users"
+      item-label="pelanggan"
+      :total="meta?.total ?? 0"
+      :page="page"
+      :per-page="perPage"
+      :total-pages="totalPages"
+      @update:search="searchInput = $event"
+      @update:page="page = $event"
+      @retry="customersQuery.refetch()"
+    >
+      <template #empty-action>
+        <button v-if="!search" class="secondary-action" @click="openCreate"><AppIcon name="plus" :size="14" /> Tambah pelanggan</button>
+      </template>
+      <template #table>
         <table class="products-table customers-table">
           <thead><tr><th>NAMA PELANGGAN</th><th>GENDER</th><th>TANGGAL LAHIR</th><th>NO. HP</th><th>ALAMAT</th><th class="actions-column">AKSI</th></tr></thead>
           <tbody>
@@ -247,10 +263,8 @@ onBeforeUnmount(() => {
             </tr>
           </tbody>
         </table>
-      </div>
-
-      <footer v-if="rows.length && !customersQuery.isPending.value" class="table-pagination"><span>Menampilkan <strong>{{ (page - 1) * perPage + 1 }}–{{ Math.min(page * perPage, meta?.total ?? 0) }}</strong> dari <strong>{{ meta?.total ?? 0 }}</strong> pelanggan</span><div class="pagination-controls"><button :disabled="page <= 1" aria-label="Halaman sebelumnya" @click="page--"><AppIcon name="chevron" :size="14" class="previous-chevron" /></button><span>Halaman <strong>{{ page }}</strong> dari <strong>{{ totalPages }}</strong></span><button :disabled="page >= totalPages" aria-label="Halaman selanjutnya" @click="page++"><AppIcon name="chevron" :size="14" /></button></div></footer>
-    </div>
+      </template>
+    </ResourceTablePanel>
     <div class="products-footnote"><AppIcon name="check" :size="13" /> Data pelanggan yang dihapus dikeluarkan dari daftar aktif.</div>
 
     <Transition name="modal-fade">
@@ -282,12 +296,19 @@ onBeforeUnmount(() => {
       </div>
     </Transition>
 
-    <Transition name="modal-fade">
-      <div v-if="dialog === 'delete' && selectedCustomer" class="dialog-backdrop" @click.self="closeDialog">
-        <section class="product-dialog delete-dialog" aria-labelledby="delete-customer-title"><div class="delete-icon"><AppIcon name="trash" :size="20" /></div><button class="dialog-close delete-close" aria-label="Tutup" @click="closeDialog"><AppIcon name="close" /></button><h2 id="delete-customer-title">Hapus pelanggan ini?</h2><p><strong>{{ selectedCustomer.customer_name }}</strong> akan dikeluarkan dari daftar pelanggan aktif. Riwayat order terkait tetap tersimpan.</p><div v-if="deleteMutation.isError.value" class="form-server-error" role="alert"><AppIcon name="warning" :size="15" /> {{ deleteMutation.error.value instanceof Error ? deleteMutation.error.value.message : 'Pelanggan belum dapat dihapus.' }}</div><div class="dialog-footer"><button class="secondary-action" :disabled="deleteMutation.isPending.value" @click="closeDialog">Batal</button><button class="delete-confirm" :disabled="deleteMutation.isPending.value" @click="confirmDelete">{{ deleteMutation.isPending.value ? 'Menghapus…' : 'Ya, hapus pelanggan' }}</button></div></section>
-      </div>
-    </Transition>
+    <ConfirmDeleteDialog
+      v-if="dialog === 'delete' && selectedCustomer"
+      entity-label="pelanggan"
+      :entity-name="selectedCustomer.customer_name"
+      :pending="deleteMutation.isPending.value"
+      :error="deleteMutation.error.value instanceof Error ? deleteMutation.error.value.message : ''"
+      confirm-label="Ya, hapus pelanggan"
+      @close="closeDialog"
+      @confirm="confirmDelete"
+    >
+      akan dikeluarkan dari daftar pelanggan aktif. Riwayat order terkait tetap tersimpan.
+    </ConfirmDeleteDialog>
 
-    <Transition name="toast"><div v-if="feedback" class="products-toast" :class="feedback.type" role="status"><AppIcon :name="feedback.type === 'success' ? 'check' : 'warning'" :size="16" /> {{ feedback.message }}<button aria-label="Tutup notifikasi" @click="feedback = null"><AppIcon name="close" :size="14" /></button></div></Transition>
+    <FeedbackToast :feedback="feedback" @dismiss="feedback = null" />
   </section>
 </template>
