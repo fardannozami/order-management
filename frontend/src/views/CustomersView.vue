@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import DatePicker from 'primevue/datepicker'
 import AppIcon from '../components/AppIcon.vue'
 import ConfirmDeleteDialog from '../components/resources/ConfirmDeleteDialog.vue'
 import FeedbackToast from '../components/resources/FeedbackToast.vue'
@@ -40,6 +41,24 @@ const search = ref('')
 const dialog = ref<'create' | 'edit' | 'detail' | 'delete' | null>(null)
 const selectedCustomer = ref<Customer | null>(null)
 const form = reactive({ customer_name: '', customer_address: '', gender: '' as '' | 'Pria' | 'Wanita', birth_date: '', phone: '' })
+const birthDateValue = computed<Date | null>({
+  get() {
+    if (!form.birth_date) return null
+    const [year, month, day] = form.birth_date.split('-').map(Number)
+    return new Date(year, month - 1, day)
+  },
+  set(value) {
+    if (!value) {
+      form.birth_date = ''
+      return
+    }
+    const year = value.getFullYear()
+    const month = String(value.getMonth() + 1).padStart(2, '0')
+    const day = String(value.getDate()).padStart(2, '0')
+    form.birth_date = `${year}-${month}-${day}`
+  },
+})
+const maxBirthDate = new Date()
 const formErrors = reactive<Record<string, string>>({})
 const formError = ref('')
 const feedback = ref<{ type: 'success' | 'error'; message: string } | null>(null)
@@ -275,7 +294,7 @@ onBeforeUnmount(() => {
           <div class="form-grid">
             <label class="form-field"><span>Nama lengkap <b>*</b></span><input v-model="form.customer_name" maxlength="150" placeholder="Nama pelanggan" autocomplete="name" /><small v-if="formErrors.customer_name" class="field-error">{{ formErrors.customer_name }}</small></label>
             <label class="form-field"><span>Gender <b>*</b></span><select v-model="form.gender"><option value="" disabled>Pilih gender</option><option value="Pria">Pria</option><option value="Wanita">Wanita</option></select><small v-if="formErrors.gender" class="field-error">{{ formErrors.gender }}</small></label>
-            <label class="form-field"><span>Tanggal lahir <b>*</b></span><input v-model="form.birth_date" type="date" :max="new Date().toISOString().slice(0, 10)" /><small v-if="formErrors.birth_date" class="field-error">{{ formErrors.birth_date }}</small></label>
+            <label class="form-field"><span>Tanggal lahir <b>*</b></span><DatePicker v-model="birthDateValue" inputId="customer-birth-date" dateFormat="dd/mm/yy" placeholder="Pilih tanggal lahir" :maxDate="maxBirthDate" :manualInput="true" :showButtonBar="true" :showClear="true" showIcon iconDisplay="input" fluid :invalid="Boolean(formErrors.birth_date)" /><small v-if="formErrors.birth_date" class="field-error">{{ formErrors.birth_date }}</small></label>
             <label class="form-field"><span>Nomor HP</span><input v-model="form.phone" type="tel" maxlength="20" placeholder="Contoh: 081234567890" autocomplete="tel" /><small v-if="formErrors.phone" class="field-error">{{ formErrors.phone }}</small></label>
             <label class="form-field form-field-wide"><span>Alamat <b>*</b></span><textarea v-model="form.customer_address" maxlength="255" rows="3" placeholder="Alamat lengkap pelanggan" autocomplete="street-address" /><small v-if="formErrors.customer_address" class="field-error">{{ formErrors.customer_address }}</small></label>
           </div>
