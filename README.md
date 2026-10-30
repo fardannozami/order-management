@@ -2,6 +2,8 @@
 
 Aplikasi online shop sederhana untuk mengelola katalog, pelanggan, transaksi penjualan, dan ringkasan bisnis. Repository ini berisi dua service terpisah: REST API di `backend/` dan SPA Vue di `frontend/`.
 
+**Live demo:** [order.ajitama.dev](https://order.ajitama.dev/)
+
 ![Landing page](docs/screenshots/landing.png)
 
 ## Tech stack
