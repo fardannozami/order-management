@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { pinia } from '../stores/pinia'
 import DashboardView from '../views/DashboardView.vue'
+import CustomersView from '../views/CustomersView.vue'
 import ProductsView from '../views/ProductsView.vue'
 import PlaceholderView from '../views/PlaceholderView.vue'
 
@@ -35,7 +36,7 @@ const router = createRouter({
     {
       path: '/customers',
       name: 'customers',
-      component: PlaceholderView,
+      component: CustomersView,
       meta: { title: 'Pelanggan', description: 'Daftar dan pengelolaan data pelanggan.', requiresAuth: true },
     },
     {
